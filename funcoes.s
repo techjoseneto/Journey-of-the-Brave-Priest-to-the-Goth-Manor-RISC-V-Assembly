@@ -499,6 +499,9 @@ CHK_PAREDE_BULLET:
 		# Se o tiro bater no zero (parede/cerca), ele explode
 		beq t1, zero, B_MORRE
 
+		li t6, 19
+		beq t1, t6, B_MORRE
+
 SUCESSO_BULLET:
 		# Se o caminho estiver limpo, atualiza a posição do tiro
 		la t0, BULLET_POS
@@ -780,7 +783,11 @@ VERIFICA_MUDANCA_FASE:
 		la t0, OLD_ENEMY_POS	# Atualiza a posição antiga do inimigo
 		sh t1, 0(t0)
 		sh t2, 2(t0)
-		
+
+		la t0, ENEMY_ACTIVE
+		li t1, 1
+		sw t1, 0(t0)
+
 		# PASSO D: O "ROLO COMPRESSOR" DO DOUBLE BUFFERING
 		# Como mudamos completamente de cenário, precisamos carimbar a imagem do MAPA2
 		# inteira em AMBOS os frames da tela (0 e 1). Se desenhássemos em um só,

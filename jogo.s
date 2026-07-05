@@ -14,7 +14,7 @@ ENEMY_POS:	.half 32, 32			# x, y iniciais do inimigo
 OLD_ENEMY_POS:	.half 32, 32			# x, y do inimigo
 ENEMY_COUNT:	.word 0				# Contador de frames interno do inimigo
 ENEMY_SPEED:	.word 30			# Quantidade de frames de espera para o inimigo andar (menor = mais rápido)		
-ENEMY_ACTIVE:	.word 1				# 1 = Vivo/Ativo, 2 = Fase de limpeza, 0 = Morto/Sumido
+ENEMY_ACTIVE:	.word 0				# 1 = Vivo/Ativo, 2 = Fase de limpeza, 0 = Morto/Sumido
 
 #Vidas do player/jogador
 PLAYER_LIVES:	.word 3				# Vidas do jogador (Comeca com 3)
