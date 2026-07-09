@@ -182,34 +182,48 @@ FIM_MOVE_BAIXO:	ret
 # =================================================================
 # MOVIMENTAÇÃO DO INIMIGO
 # =================================================================
-MOVE_ENEMY:
-		la t0, ENEMY_ACTIVE
-		lw t1, 0(t0)
+# =================================================================
+# ATUALIZA_INIMIGO)
+# =================================================================
+ATUALIZA_INIMIGO:
+		# 1. Só processa se o inimigo estiver puramente ativo/vivo (== 1)
+		lw t1, 0(a2)
 		li t2, 1
-		bne t1, t2, FIM_MOVE_ENEMY	# Pula se o inimigo nao esta vivo
+		bne t1, t2, FIM_ATUALIZA_INIMIGO
 		
-		la t0, ENEMY_COUNT
-		lw t1, 0(t0)
+		# 2. CONTROLE DE VELOCIDADE INDIVIDUAL
+		# Carrega, incrementa e salva o contador específico passado em a4
+		lw t1, 0(a4)
 		addi t1, t1, 1
-		sw t1, 0(t0)			
-		
+		sw t1, 0(a4)			
+
 		la t2, ENEMY_SPEED
 		lw t2, 0(t2)
-		blt t1, t2, FIM_MOVE_ENEMY	
+		blt t1, t2, EXECUTA_DESENHO_ENEMY # Se não deu o tempo, pula movimento e só desenha
 		
-		sw zero, 0(t0)			
+		# Se chegou aqui, deu o tempo de andar! Zera o contador individual deste inimigo
+		sw zero, 0(a4)			
 
-		la t0, ENEMY_POS
-		lh t3, 0(t0)			# t3 = Inimigo X
-		lh t4, 2(t0)			# t4 = Inimigo Y
+CONTINUA_IA:
+		# Salva os argumentos na pilha antes do processamento
+		# Incluímos o a4 na pilha para garantir que ele não se perca se houver subchamadas
+		addi sp, sp, -24
+		sw ra, 0(sp)
+		sw a0, 4(sp)
+		sw a1, 8(sp)
+		sw a2, 12(sp)
+		sw a3, 16(sp)
+		sw a4, 20(sp)
+
+		lh t3, 0(a0)			# t3 = Inimigo X
+		lh t4, 2(a0)			# t4 = Inimigo Y
+		
+		lw t2, 0(a0)			
+		sw t2, 0(a1)			
 		
 		la t1, CHAR_POS
 		lh t5, 0(t1)			# t5 = Player X
 		lh t6, 2(t1)			# t6 = Player Y
-		
-		la t1, OLD_ENEMY_POS
-		lw t2, 0(t0)			
-		sw t2, 0(t1)			
 		
 		beq t3, t5, IA_Y		
 		blt t3, t5, IA_DIR		
@@ -218,7 +232,7 @@ IA_ESQ:		addi t3, t3, -16
 IA_DIR:		addi t3, t3, 16
 		j CHK_COLISAO_ENEMY
 
-IA_Y:		beq t4, t6, FIM_MOVE_ENEMY	
+IA_Y:		beq t4, t6, RESTAURA_PILHA_ENEMY	
 		blt t4, t6, IA_BAIXO
 IA_CIMA:	addi t4, t4, -16
 		j CHK_COLISAO_ENEMY
@@ -234,16 +248,53 @@ CHK_COLISAO_ENEMY:
 		la t2, CURRENT_MAP_MATRIX
 		lw t2, 0(t2)
 		add t2, t2, t1
-		lbu t1, 0(t2)			# t1 = Bloco alvo do inimigo
+		lbu t1, 0(t2)			
 		
-		# Se for zero (parede/cerca), o inimigo bloqueia na hora
-		beq t1, zero, FIM_MOVE_ENEMY
+		beq t1, zero, RESTAURA_PILHA_ENEMY
 
 SUCESSO_MOVE_ENEMY:
-		la t0, ENEMY_POS
-		sh t3, 0(t0)
-		sh t4, 2(t0)
-FIM_MOVE_ENEMY:	ret
+		lw a0, 4(sp)
+		sh t3, 0(a0)
+		sh t4, 2(a0)
+
+RESTAURA_PILHA_ENEMY:
+		lw ra, 0(sp)
+		lw a0, 4(sp)
+		lw a1, 8(sp)
+		lw a2, 12(sp)
+		lw a3, 16(sp)
+		lw a4, 20(sp)
+		addi sp, sp, 24
+
+# -----------------------------------------------------------------
+# RENDERIZAÇÃO ESTÁVEL DO SPRITE (Mantida igual)
+# -----------------------------------------------------------------
+EXECUTA_DESENHO_ENEMY:
+		addi sp, sp, -4
+		sw ra, 0(sp)
+		
+		la t1, ENEMY_A_POS
+		beq a0, t1, USA_SPRITE_A
+
+USA_SPRITE_B:
+		mv t0, a0 
+		la a0, inimigoB	
+		j PRONTO_PARA_DESENHAR
+
+USA_SPRITE_A:
+		mv t0, a0
+		la a0, inimigoA			
+
+PRONTO_PARA_DESENHAR:
+		lh a1, 0(t0)			
+		lh a2, 2(t0)			
+		call PRINT	
+		
+		lw ra, 0(sp)
+		addi sp, sp, 4
+
+FIM_ATUALIZA_INIMIGO:
+		ret
 
 # =================================================================
 # LIMPEZA DE RASTRO (PLAYER E INIMIGO)
@@ -277,56 +328,63 @@ EXECUTA_LIMPEZA_PLAYER:
 		addi sp, sp, 4
 		ret		
 
-LIMPA_RASTRO_ENEMY:
-		# Verifica se o inimigo acabou de atacar o player
+# =================================================================
+# LIMPA RASTRO INIMIGO
+# Entradas:
+#   a0 = Endereço de ENEMY_X_OLD_POS (ex: la a0, ENEMY_A_OLD_POS)
+#   a1 = Endereço de ENEMY_X_ACTIVE  (ex: la a1, ENEMY_A_ACTIVE)
+# =================================================================
+LIMPA_RASTRO_INIMIGO:
+		# Verifica se o inimigo (globalmente) acabou de atacar o player
 		la t0, ENEMY_RESPAWN_COUNT
 		lw t1, 0(t0)
 		blez t1, LOGICA_PADRAO_ENEMY	# Se for 0, segue o jogo normal
 		
+		# CASO ESPECIAL DE ATAQUE
 		addi t1, t1, -1
 		sw t1, 0(t0)				
 		
-		# Limpa a ultima e a penultima posicoes nos dois frames para garantir que nada fique sobrando
 		addi sp, sp, -4
 		sw ra, 0(sp)		
 		
-		# Limpa na coordenada de colisao
 		la t0, ENEMY_DEATH_POS			
 		lh a1, 0(t0)
 		lh a2, 2(t0)
-		call ENCONTRA_TEXTURA			# Redesenha o chao
+		call ENCONTRA_TEXTURA			
 		
-		# Limpa na penultima coordenada
 		la t0, ENEMY_PENULTIMA_POS
 		lh a1, 0(t0)
 		lh a2, 2(t0)
-		call ENCONTRA_TEXTURA			# Redesenha o chao
+		call ENCONTRA_TEXTURA			
 		
 		lw ra, 0(sp)			
 		addi sp, sp, 4			
-		ret					# Pula a logica padrao
+		ret					
 
 LOGICA_PADRAO_ENEMY:
-		la t0, ENEMY_ACTIVE
-		lw t1, 0(t0)
-		beq t1, zero, FIM_RASTRO_ENEMY	
+		# Lê o estado de atividade DESTE inimigo específico (usando a1)
+		lw t1, 0(a1)
+		beq t1, zero, FIM_RASTRO_ENEMY	# Se for 0 (morto definitivo), não limpa nada
 		
-		addi sp, sp, -4
-		sw t1, 0(sp)
-
-		la t0, OLD_ENEMY_POS		
-		lh a1, 0(t0)			
-		lh a2, 2(t0)			
-
-		addi sp, sp, -4
+		# Salva na pilha os registradores de argumento que vamos precisar depois
+		addi sp, sp, -12
 		sw ra, 0(sp)
-		call ENCONTRA_TEXTURA		
+		sw a1, 4(sp)        # Guarda o endereço do ACTIVE
+		sw t1, 8(sp)        # Guarda o valor atual do ACTIVE
+
+		# Carrega a coordenada antiga DESTE inimigo específico (usando a0)
+		lh a1, 0(a0)			
+		lh a2, 2(a0)			
+
+		call ENCONTRA_TEXTURA		# Redesenha o chão na posição antiga
+		
+		# Recupera os dados da pilha
 		lw ra, 0(sp)
-		addi sp, sp, 4
+		lw a1, 4(sp)        # Endereço do ACTIVE deste inimigo
+		lw t1, 8(sp)        # Valor do ACTIVE deste inimigo
+		addi sp, sp, 12
 
-		lw t1, 0(sp)
-		addi sp, sp, 4
-
+		# --- MÁQUINA DE ESTADOS DO RASTRO DE MORTE DESTE INIMIGO ---
 		li t2, 2
 		beq t1, t2, ENEMY_VA_PARA_3	
 		li t2, 3
@@ -335,14 +393,12 @@ LOGICA_PADRAO_ENEMY:
 		j FIM_RASTRO_ENEMY
 
 ENEMY_VA_PARA_3:
-		la t0, ENEMY_ACTIVE
-		li t1, 3
-		sw t1, 0(t0)			
+		li t3, 3
+		sw t3, 0(a1)			# Atualiza o ACTIVE deste inimigo para 3
 		j FIM_RASTRO_ENEMY
 
 ENEMY_VA_PARA_0:
-		la t0, ENEMY_ACTIVE
-		sw zero, 0(t0)			
+		sw zero, 0(a1)			# Desativa este inimigo de vez (0) após limpar todos os frames
 
 FIM_RASTRO_ENEMY:
 		ret
@@ -446,37 +502,69 @@ B_ESQ:		addi t3, t3, -16
 		j CHK_B_COLISAO
 B_DIR:		addi t3, t3, 16
 
-CHK_B_COLISAO: 					#Detecta se o inimigo foi atingido
-		la t0, ENEMY_ACTIVE
+# -----------------------------------------------------------------
+#  DETECÇÃO DE IMPACTO DUPLA
+# -----------------------------------------------------------------
+CHK_B_COLISAO: 					
+		# --- TESTA COLISÃO COM INIMIGO A ---
+		la t0, ENEMY_A_ACTIVE
 		lw t1, 0(t0)
 		li t2, 1
-		bne t1, t2, CHK_PAREDE_BULLET	# Se o inimigo já está morto, pula a checagem
+		bne t1, t2, CHK_BULLET_INIMIGO_B # Se o A não está ativo jogável, testa o B
 		
-		la t0, ENEMY_POS
-		lh t1, 0(t0)			# t1 = Inimigo X
-		lh t2, 2(t0)			# t2 = Inimigo Y
+		la t0, ENEMY_A_POS
+		lh t1, 0(t0)			# t1 = Inimigo A X
+		lh t2, 2(t0)			# t2 = Inimigo A Y
 		
-		bne t3, t1, CHK_PAREDE_BULLET	# Se o X do tiro for diferente do X do inimigo, pula
-		bne t4, t2, CHK_PAREDE_BULLET	# Se o Y do tiro for diferente do Y do inimigo, pula
+		bne t3, t1, CHK_BULLET_INIMIGO_B # Se X não bateu, testa o B
+		bne t4, t2, CHK_BULLET_INIMIGO_B # Se Y não bateu, testa o B
 		
-		# SE CHEGOU AQUI, HOUVE UM IMPACTO!
+		# HOUVE IMPACTO NO INIMIGO A!
+		la a0, ENEMY_A_POS
+		la a1, ENEMY_A_OLD_POS
+		la a2, ENEMY_A_ACTIVE
+		la a3, ENEMY_A_LIVES
+		j EXECUTA_DANO_INIMIGO
+
+CHK_BULLET_INIMIGO_B:
+		# --- TESTA COLISÃO COM INIMIGO B ---
+		la t0, ENEMY_B_ACTIVE
+		lw t1, 0(t0)
+		li t2, 1
+		bne t1, t2, CHK_PAREDE_BULLET	# Se o B também não está ativo, pula pro cenário
+		
+		la t0, ENEMY_B_POS
+		lh t1, 0(t0)			# t1 = Inimigo B X
+		lh t2, 2(t0)			# t2 = Inimigo B Y
+		
+		bne t3, t1, CHK_PAREDE_BULLET	
+		bne t4, t2, CHK_PAREDE_BULLET	
+		
+		# HOUVE IMPACTO NO INIMIGO B!
+		la a0, ENEMY_B_POS
+		la a1, ENEMY_B_OLD_POS
+		la a2, ENEMY_B_ACTIVE
+		la a3, ENEMY_B_LIVES
+
+EXECUTA_DANO_INIMIGO:
+		# Desativa o tiro (joga para animação de explosão 2)
 		la t0, BULLET_ACTIVE
 		li t1, 2
-		sw t1, 0(t0)			# Desativa o tiro e joga para o estado de limpeza (2)
+		sw t1, 0(t0)
 		
-		la t0, ENEMY_ACTIVE
-		li t1, 2
-		sw t1, 0(t0)			# Abate o inimigo e joga para o estado de limpeza (2)
+		# Protege registradores na pilha e processa o Respawn/Morte
+		addi sp, sp, -4
+		sw ra, 0(sp)
+		call RESPAWN_INIMIGO
+		lw ra, 0(sp)
+		addi sp, sp, 4
 		
-		la t0, ENEMY_POS
-		lw t1, 0(t0)			# Carrega as coordenadas X e Y atuais do inimigo
-		la t2, OLD_ENEMY_POS
-		sw t1, 0(t2)			# Força o rastro a ser exatamente onde ele morreu!
-		
-		j FIM_MOVE_BULLET		# Encerra o frame do tiro imediatamente
+		j FIM_MOVE_BULLET		# Encerra o frame do tiro
 
+# -----------------------------------------------------------------
+#  COLISÃO COM CENÁRIO E PAREDES
+# -----------------------------------------------------------------
 CHK_PAREDE_BULLET:
-		# 1. Limites físicos da tela (Evita crash de out-of-bounds)
 		blt t3, zero, B_MORRE
 		li t1, 320
 		bge t3, t1, B_MORRE
@@ -484,26 +572,22 @@ CHK_PAREDE_BULLET:
 		li t1, 240
 		bge t4, t1, B_MORRE
 
-		# 2. Verificação de colisão dinâmica
-		srli t1, t4, 4			# Y / 16
+		srli t1, t4, 4			
 		li t2, 20
 		mul t1, t1, t2			
-		srli t2, t3, 4			# X / 16
-		add t1, t1, t2			# Índice na matriz
+		srli t2, t3, 4			
+		add t1, t1, t2			
 		
 		la t2, CURRENT_MAP_MATRIX
 		lw t2, 0(t2)
 		add t2, t2, t1
 		lbu t1, 0(t2)			
 		
-		# Se o tiro bater no zero (parede/cerca), ele explode
 		beq t1, zero, B_MORRE
-
 		li t6, 19
 		beq t1, t6, B_MORRE
 
 SUCESSO_BULLET:
-		# Se o caminho estiver limpo, atualiza a posição do tiro
 		la t0, BULLET_POS
 		sh t3, 0(t0)
 		sh t4, 2(t0)
@@ -516,6 +600,67 @@ B_MORRE:
 
 FIM_MOVE_BULLET:
 		ret
+		
+		
+# =================================================================
+# SUB-ROTINA: RESPAWN_INIMIGO
+# Entradas passadas pelo impacto do tiro:
+#   a0 = Endereço de ENEMY_X_POS
+#   a1 = Endereço de ENEMY_X_OLD_POS
+#   a2 = Endereço de ENEMY_X_ACTIVE
+#   a3 = Endereço de ENEMY_X_LIVES
+# =================================================================
+RESPAWN_INIMIGO:
+		# 1. Soma +1 no contador de baixas gerais da Fase 2
+		la t0, TOTAL_DEFEATED
+		lw t1, 0(t0)
+		addi t1, t1, 1
+		sw t1, 0(t0)
+
+		# 2. Reduz 1 vida deste inimigo específico
+		lw t1, 0(a3)			# t1 = vidas restantes
+		addi t1, t1, -1
+		sw t1, 0(a3)			# Atualiza na memória
+		
+		# Força o rastro antigo a ser onde ele acabou de ser baleado (para limpar frame)
+		lw t2, 0(a0)
+		sw t2, 0(a1)
+
+		# Se as vidas DESTE inimigo zeraram, ele morre em definitivo
+		bnez t1, FAZ_TELETRANSPORTE_RESPAWN
+		
+		# --- CASO: MORTE DEFINITIVA ---
+		li t2, 2
+		sw t2, 0(a2)			# Joga ACTIVE para estado 2 (Inicia sequência de sumiço)
+		ret
+
+		# --- CASO: RENASCIMENTO EM NOVO PONTO ---
+FAZ_TELETRANSPORTE_RESPAWN:
+		# Descobre qual é o próximo ponto de spawn da lista (0, 1, 2 ou 3)
+		la t0, SPAWN_INDEX
+		lw t1, 0(t0)			# t1 = índice atual (0 a 3)
+		
+		# Calcula o deslocamento na tabela SPAWN_POINTS (Cada ponto tem 4 bytes: .half X, Y)
+		slli t2, t1, 2			# t2 = índice * 4
+		la t3, SPAWN_POINTS
+		add t3, t3, t2			# t3 = Endereço exato do par X,Y escolhido
+		
+		# Carrega as novas coordenadas de spawn
+		lh t4, 0(t3)			# Novo X
+		lh t5, 2(t3)			# Novo Y
+		
+		# Aplica o teletransporte instantâneo no inimigo!
+		sh t4, 0(a0)
+		sh t5, 2(a0)
+		
+		# Atualiza o SPAWN_INDEX para que o PRÓXIMO inimigo que morrer nasça em outro lugar
+		addi t1, t1, 1			# Próximo índice
+		li t2, 4
+		blt t1, t2, SALVA_INDEX
+		li t1, 0			# Se passou de 3, volta para o ponto 0 (Loop circular)
+SALVA_INDEX:
+		sw t1, 0(t0)
+		ret	
 
 # --- DESENHO DO TIRO ---
 DESENHA_BULLET:
@@ -620,69 +765,92 @@ PRINT_LINHA:	lw t6,0(t1)
 		ret
 		
 # =================================================================
-# SISTEMA DE DANO E VIDAS (PLAYER VS INIMIGO)
+# SISTEMA DE DANO E VIDAS (PLAYER VS INIMIGO DUPLO)
 # =================================================================
-
 VERIFICA_DANO_PLAYER:
-		# O inimigo so causa dano se estiver ativo
-		la t0, ENEMY_ACTIVE
-		lw t1, 0(t0)
-		li t2, 1
-		bne t1, t2, FIM_VERIFICA_DANO
-		
-		# Coordenadas do player
+		# Coordenadas atuais do player (comum para os testes)
 		la t0, CHAR_POS
 		lh t1, 0(t0)			
 		lh t2, 2(t0)			
+
+		# --- TESTA COLISÃO COM INIMIGO A ---
+		la t3, ENEMY_A_ACTIVE
+		lw t4, 0(t3)
+		li t5, 1
+		bne t4, t5, TESTA_INIMIGO_B	# Se o A não está ativo, pula para testar o B
 		
-		# Coordenadas do inimigo
-		la t3, ENEMY_POS
+		la t3, ENEMY_A_POS
 		lh t4, 0(t3)			
 		lh t5, 2(t3)			
 		
-		# Compara as coordenadas
+		bne t1, t4, TESTA_INIMIGO_B	# Se X não bateu, testa o B
+		bne t2, t5, TESTA_INIMIGO_B	# Se Y não bateu, testa o B
+		
+		# SE CHEGOU AQUI, O INIMIGO A ALCANÇOU O PLAYER!
+		la a0, ENEMY_A_POS		# Passa dados do A por argumento
+		la a1, ENEMY_A_OLD_POS
+		li a2, 288			# X de reset do A (Ponto 0)
+		li a3, 32			# Y de reset do A
+		j APLICA_DANO_LOGICA
+
+TESTA_INIMIGO_B:
+		# --- TESTA COLISÃO COM INIMIGO B ---
+		la t3, ENEMY_B_ACTIVE
+		lw t4, 0(t3)
+		li t5, 1
+		bne t4, t5, FIM_VERIFICA_DANO	# Se o B também não está ativo, encerra
+		
+		la t3, ENEMY_B_POS
+		lh t4, 0(t3)			
+		lh t5, 2(t3)			
+		
 		bne t1, t4, FIM_VERIFICA_DANO	
 		bne t2, t5, FIM_VERIFICA_DANO	
 		
-		# =========================================================
-		# O INIMIGO ALCANCOU O PLAYER! (PROCESSA O DANO)
-		# =========================================================
-		
-		# Subtrai uma vida
+		# SE CHEGOU AQUI, O INIMIGO B ALCANÇOU O PLAYER!
+		la a0, ENEMY_B_POS		# Passa dados do B por argumento
+		la a1, ENEMY_B_OLD_POS
+		li a2, 128			# X de reset do B (Ponto 1)
+		li a3, 112			# Y de reset do B
+
+# -----------------------------------------------------------------
+# ROTINA CORE DE PROCESAMENTO DE DANO (Acionada por qualquer inimigo)
+# -----------------------------------------------------------------
+APLICA_DANO_LOGICA:
+		# Subtrai uma vida do jogador
 		la t0, PLAYER_LIVES
 		lw t1, 0(t0)
 		addi t1, t1, -1
 		sw t1, 0(t0)
 		
-		# Se as tres vidas acabarem, acaba o jogo
+		# Se as vidas acabarem, vai para tela de derrota
 		blez t1, TELA_GAME_OVER
 		
-		# Limpa o "fantasma" do player
+		# Configura limpeza do fantasma da morte do Player
 		la t0, CHAR_POS
 		lw t1, 0(t0)			
 		la t2, PLAYER_DEATH_POS
 		sw t1, 0(t2)			
+		
 		la t0, PLAYER_RESPAWN_COUNT
 		li t1, 2
 		sw t1, 0(t0)			
 
-		# Limpa a ultima e a penultima posicoes do inimigo
-		la t0, ENEMY_POS
-		lw t1, 0(t0)			
+		# Configura limpeza do fantasma do inimigo que atacou (usando a0 e a1)
+		lw t1, 0(a0)			
 		la t2, ENEMY_DEATH_POS
-		sw t1, 0(t2)			# Salva a posicao da colisao
+		sw t1, 0(t2)			
 
-		la t0, OLD_ENEMY_POS
-		lw t1, 0(t0)			
+		lw t1, 0(a1)			
 		la t2, ENEMY_PENULTIMA_POS
-		sw t1, 0(t2)			# Salva a penultima posicao
+		sw t1, 0(t2)			
 
 		la t0, ENEMY_RESPAWN_COUNT
 		li t1, 2
-		sw t1, 0(t0)			# Ativa os 2 frames de limpeza
+		sw t1, 0(t0)			
 
-		# Manda o player e o inimigo para as suas coordenadas iniciais
-		# Player volta para (160, 208)
+		# --- REPOSICIONA OS ATORES ---
+		# Player volta para a base inferior (160, 208)
 		li t1, 160
 		li t2, 208
 		la t0, CHAR_POS
@@ -692,15 +860,11 @@ VERIFICA_DANO_PLAYER:
 		sh t1, 0(t0)
 		sh t2, 2(t0)
 		
-		# Inimigo volta para (32, 32)
-		li t1, 32
-		li t2, 32
-		la t0, ENEMY_POS
-		sh t1, 0(t0)
-		sh t2, 2(t0)
-		la t0, OLD_ENEMY_POS
-		sh t1, 0(t0)
-		sh t2, 2(t0)
+		# CORREÇÃO: Salva X (a2) e Y (a3) corretamente sem misturar os dados
+		sh a2, 0(a0)	# Define o novo X na posição atual
+		sh a3, 2(a0)	# Define o novo Y na posição atual
+		sh a2, 0(a1)	# Define o novo X na posição antiga (rastro)
+		sh a3, 2(a1)	# Define o novo Y na posição antiga (rastro)
 
 FIM_VERIFICA_DANO:
 		ret
@@ -770,21 +934,35 @@ VERIFICA_MUDANCA_FASE:
 		la t0, CHAR_POS
 		sh t1, 0(t0)
 		sh t2, 2(t0)
-		la t0, OLD_CHAR_POS		# Atualiza a posição antiga para não deixar rastro fantasma
+		la t0, OLD_CHAR_POS		
 		sh t1, 0(t0)
 		sh t2, 2(t0)
 		
-		# Inimigo se posiciona no canto superior direito (x=288, y=32)
+		# --- INICIALIZAÇÃO DO INIMIGO A (Nasce no Ponto 0: 288, 32) ---
 		li t1, 288
 		li t2, 32
-		la t0, ENEMY_POS
+		la t0, ENEMY_A_POS
 		sh t1, 0(t0)
 		sh t2, 2(t0)
-		la t0, OLD_ENEMY_POS	# Atualiza a posição antiga do inimigo
+		la t0, ENEMY_A_OLD_POS	
 		sh t1, 0(t0)
 		sh t2, 2(t0)
+		
+		la t0, ENEMY_A_ACTIVE
+		li t1, 1
+		sw t1, 0(t0)                # Ativa o Inimigo A
 
-		la t0, ENEMY_ACTIVE
+		# --- INICIALIZAÇÃO DO INIMIGO B (Nasce no Ponto 1: 32, 64) ---
+		li t1, 160               
+		li t2, 112
+		la t0, ENEMY_B_POS
+		sh t1, 0(t0)
+		sh t2, 2(t0)
+		la t0, ENEMY_B_OLD_POS	
+		sh t1, 0(t0)
+		sh t2, 2(t0)
+		
+		la t0, ENEMY_B_ACTIVE
 		li t1, 1
 		sw t1, 0(t0)
 

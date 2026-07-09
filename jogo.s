@@ -1,20 +1,40 @@
 .data
 
-#Fase
+#FASE
 CURRENT_LEVEL:       .word 1       # Comeca na Fase 1
-CURRENT_MAP_MATRIX:  .word 0       # Ponteiro para a matriz lógica ativa
+CURRENT_MAP_MATRIX:  .word 0       # Ponteiro para a matriz logica ativa
 CURRENT_MAP_BG:      .word 0       # Ponteiro para a textura de fundo ativa
 
-#Posicao do player/jogador
+#POSICAO DO PLAYER/JOGADOR
 CHAR_POS:	.half 160,208			# x, y iniciais do personagem
 OLD_CHAR_POS:	.half 160,208			# x, y do personagem
 
-#Posicao e informacoes dos inimigos
-ENEMY_POS:	.half 32, 32			# x, y iniciais do inimigo
-OLD_ENEMY_POS:	.half 32, 32			# x, y do inimigo
-ENEMY_COUNT:	.word 0				# Contador de frames interno do inimigo
-ENEMY_SPEED:	.word 30			# Quantidade de frames de espera para o inimigo andar (menor = mais rápido)		
-ENEMY_ACTIVE:	.word 0				# 1 = Vivo/Ativo, 2 = Fase de limpeza, 0 = Morto/Sumido
+#POSICAO E DADOS SOBRE OS INIMIGOS DA FASE 2
+ENEMY_A_COUNT:          .word 0
+ENEMY_B_COUNT:          .word 0       
+ENEMY_SPEED:          .word 10     
+
+TOTAL_DEFEATED:       .word 0       # Quantas vezes os inimigos morreram no total
+SPAWN_INDEX:          .word 0       # Proximo ponto de nascimento usado
+
+# tabela de nascimentos
+SPAWN_POINTS:
+    .half 288, 32                   # Ponto 0: Canto superior direito
+    .half 160, 112                    # Ponto 1: Lateral esquerda
+    .half 128, 112                  # Ponto 2: Centro do mapa
+    .half 288, 192                  # Ponto 3: Canto inferior direito
+
+# inimigo A
+ENEMY_A_POS:          .half 0, 0    # Coordenadas X, Y atuais do Inimigo A
+ENEMY_A_OLD_POS:      .half 0, 0    # Coordenadas X, Y do frame anterior (rastro)
+ENEMY_A_ACTIVE:       .word 0       # 0 = Inativo (Fase 1), 1 = Ativo (Fase 2)
+ENEMY_A_LIVES:        .word 3       # Quantidade de "clones/vidas" restantes
+
+# inimigo B
+ENEMY_B_POS:          .half 0, 0    # Coordenadas X, Y atuais do Inimigo B
+ENEMY_B_OLD_POS:      .half 0, 0    # Coordenadas X, Y do frame anterior (rastro)
+ENEMY_B_ACTIVE:       .word 0       # 0 = Inativo (Fase 1), 1 = Ativo (Fase 2)
+ENEMY_B_LIVES:        .word 3       # Quantidade de "clones/vidas" restantes
 
 #Vidas do player/jogador
 PLAYER_LIVES:	.word 3				# Vidas do jogador (Comeca com 3)
@@ -54,49 +74,67 @@ SETUP:		la t0, MATRIZ_MAPA1
 		li a3,1				
 		call PRINT
 
-GAME_LOOP:	call KEY2			# Tecla do jogador para mover o player
-		call MOVE_ENEMY			# Movimentacao dos inimigos
+GAME_LOOP:	
+		call KEY2			# Tecla do jogador para mover o player
+
 		call MOVE_BULLET		# Movimentacao do tiro
-		call VERIFICA_DANO_PLAYER	#Checa se as coordenadas do inimigo sao iguais a do player	
-		call VERIFICA_MUDANCA_FASE   	#Sempre de olho se o player passou de fase
+		call VERIFICA_DANO_PLAYER	# Checa se as coordenadas do inimigo sao iguais a do player	
+		call VERIFICA_MUDANCA_FASE   	# Sempre de olho se o player passou de fase
 		
-		xori s0,s0,1			# Inverte o frame atual
+		# --- TROCA DE FRAME ANTES DAS RENDERIZAÇÕES ---
+		xori s0, s0, 1			# Inverte o frame atual (Double Buffering perfeito)
+		
+		# =========================================================
+		# PROCESSAMENTO DA DUPLA DE INIMIGOS
+		# =========================================================
+		# --- PROCESSA INIMIGO A (Move e Desenha) ---
+		la a0, ENEMY_A_POS          
+		la a1, ENEMY_A_OLD_POS      
+		la a2, ENEMY_A_ACTIVE       
+		mv a3, s0     
+		la a4, ENEMY_A_COUNT              
+		call ATUALIZA_INIMIGO
+		
+		# --- PROCESSA INIMIGO B (Move e Desenha) ---
+		la a0, ENEMY_B_POS          
+		la a1, ENEMY_B_OLD_POS      
+		la a2, ENEMY_B_ACTIVE       
+		mv a3, s0        
+		la a4, ENEMY_B_COUNT           
+		call ATUALIZA_INIMIGO
+		# =========================================================
 		
 		# --- DESENHA PERSONAGEM ---
-		la t0,CHAR_POS			
-		la a0,char			
-		lh a1,0(t0)			
-		lh a2,2(t0)			
-		mv a3,s0			
+		la t0, CHAR_POS			
+		la a0, char			
+		lh a1, 0(t0)			
+		lh a2, 2(t0)			
+		mv a3, s0			
 		call PRINT			
 		
-		# --- DESENHA INIMIGO ---
-		la t0, ENEMY_ACTIVE
-		lw t1, 0(t0)
-		li t2, 1
-		bne t1,t2, PULA_DESENHO_ENEMY #Se nao estiver ativo, nao desenha o inimigo
-		
-		la t0,ENEMY_POS			
-		la a0,char			# Nota: Mudar o char do inimigo depois
-		lh a1,0(t0)			
-		lh a2,2(t0)			
-		mv a3,s0			
-		call PRINT	
-		
-PULA_DESENHO_ENEMY:
 		# --- DESENHA TIRO ---	
 		call DESENHA_BULLET		
 		
-		# --- EXIBE O FRAME NO DISPLAY ---
-		li t0,0xFF200604		
-		sw s0,0(t0)			
+		# --- EXIBE O FRAME ATUALIZADO NO DISPLAY ---
+		li t0, 0xFF200604		
+		sw s0, 0(t0)			
 		
-		# --- LIMPEZA DE RASTROS ---
+		# --- LIMPEZA DE RASTROS NO FRAME INVERSO ---
 		call LIMPA_RASTRO_PLAYER	
-		call LIMPA_RASTRO_ENEMY	
+		
+		# --- LIMPA RASTRO DOS DOIS INIMIGOS ---
+		la a0, ENEMY_A_OLD_POS
+		la a1, ENEMY_A_ACTIVE
+		call LIMPA_RASTRO_INIMIGO
+		
+		la a0, ENEMY_B_OLD_POS
+		la a1, ENEMY_B_ACTIVE
+		call LIMPA_RASTRO_INIMIGO
+		
 		call LIMPA_RASTRO_BULLET	
 
 		j GAME_LOOP
+		
 .data
 #Anexo de arquivos
 .include "funcoes.s"
@@ -109,6 +147,8 @@ PULA_DESENHO_ENEMY:
 
 #Anexo de texturas
 .include "sprites/char.s"
+.include "sprites/inimigoA.s"
+.include "sprites/inimigoB.s"
 
 .include "texturas/cenario1_cerca.s"
 .include "texturas/cenario1_grama.s"
