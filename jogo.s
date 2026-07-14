@@ -1,7 +1,15 @@
 .data
-
+#INTRO
+MUSICA_INTRO:
+	.word 60, 400   # DÃ³
+	.word 64, 400   # Mi
+	.word 67, 400   # Sol
+	.word 64, 400   # Mi
+	.word 69, 400   # LÃ¡
+	.word 67, 800   # Sol (mais longa)
+	.word -1, 0     # Fim da melodia (reinicia)
 #FASE
-CURRENT_LEVEL:       .word 1       # Comeca na Fase 1
+CURRENT_LEVEL:       .word 1       # Comeca na sase 1
 CURRENT_MAP_MATRIX:  .word 0       # Ponteiro para a matriz logica ativa
 CURRENT_MAP_BG:      .word 0       # Ponteiro para a textura de fundo ativa
 
@@ -16,93 +24,92 @@ OLD_CHAR_POS:	.half 144,144			# x, y do personagem
 #POSICAO E DADOS SOBRE OS INIMIGOS DA FASE 2
 ENEMY_A_COUNT:          .word 0
 ENEMY_B_COUNT:          .word 0       
-ENEMY_SPEED:          .word 80    
+ENEMY_SPEED:          .word 80    #EDITAVEL!! Velocidade dos inimigos!
 
 TOTAL_DEFEATED:       .word 0       # Quantas vezes os inimigos morreram no total
 SPAWN_INDEX:          .word 0       # Proximo ponto de nascimento usado
 
-# tabela de nascimentos
 SPAWN_POINTS:
-    .half 32, 48                   # Ponto 0: Canto superior direito
-    .half 160, 48                    # Ponto 1: Lateral esquerda
-    .half 128, 112                  # Ponto 2: Centro do mapa
-    .half 224, 192                  # Ponto 3: Canto inferior direito
+    .half 32, 48                   
+    .half 160, 48                   
+    .half 128, 112           
+    .half 224, 192              
 
 # inimigo A
-ENEMY_A_POS:          .half 0, 0    # Coordenadas X, Y atuais do Inimigo A
-ENEMY_A_OLD_POS:      .half 0, 0    # Coordenadas X, Y do frame anterior (rastro)
-ENEMY_A_ACTIVE:       .word 0       # 0 = Inativo (Fase 1), 1 = Ativo (Fase 2)
-ENEMY_A_LIVES:        .word 4       # Quantidade de "clones/vidas" restantes
+ENEMY_A_POS:          .half 0, 0    # Coordenadas atuais
+ENEMY_A_OLD_POS:      .half 0, 0    # Coordenadas do ultimo frame
+ENEMY_A_ACTIVE:       .word 0       # Ativo ou inativo
+ENEMY_A_LIVES:        .word 4       # Quantidade de vidas restantes
 
 # inimigo B
-ENEMY_B_POS:          .half 0, 0    # Coordenadas X, Y atuais do Inimigo B
-ENEMY_B_OLD_POS:      .half 0, 0    # Coordenadas X, Y do frame anterior (rastro)
-ENEMY_B_ACTIVE:       .word 0       # 0 = Inativo (Fase 1), 1 = Ativo (Fase 2)
-ENEMY_B_LIVES:        .word 4       # Quantidade de "clones/vidas" restantes
+ENEMY_B_POS:          .half 0, 0    # Coordenadas atuais
+ENEMY_B_OLD_POS:      .half 0, 0    # Coordenadas do ultimo frame
+ENEMY_B_ACTIVE:       .word 0       # Ativo ou inativo
+ENEMY_B_LIVES:        .word 4       # Quantidade de vidas restantes
 
-# =================================================================
-# VARIÁVEIS DO CHEFÃO (FASE 3)
-# =================================================================
-BOSS_POS:             .half 144, 48    # Coordenadas X, Y iniciais do Chefão (Topo centro)
+# VARIAVEIS DO CHEFAO
+BOSS_POS:             .half 144, 48    # Coordenadas iniciais
 BOSS_OLD_POS:         .half 144, 48    # Coordenadas para limpeza de rastro
-BOSS_ACTIVE:          .word 0          # 0 = Inativo (Fases 1 e 2), 1 = Ativo (Fase 3), 2/3 = Sequência de morte
-BOSS_LIVES:           .word 1         # O Chefão aguenta 12 tiros do jogador!
-BOSS_COUNT:           .word 0          # Contador de velocidade do Boss
-BOSS_SPEED:           .word 40         # Um pouco mais rápido que os lacaios (que eram 50)
+BOSS_ACTIVE:          .word 0          # Ativo ou inativo
+BOSS_LIVES:           .word 2         # EDITAVEL!! Vidas do chefao
+BOSS_COUNT:           .word 0          
+BOSS_SPEED:           .word 40         #EDITAVEL!! Velocidade do chefao
 BOSS_DEATH_TIMER:     .word 0
 
-# --- SISTEMA DE TIRO DO CHEFÃO ---
-BOSS_BULLET_POS:      .half 0, 0       # Posição X, Y do tiro do boss
-OLD_BOSS_BULLET_POS:  .half 0, 0       # Rastro do tiro do boss
-BOSS_BULLET_ACTIVE:   .word 0          # 0 = Inativo, 1 = Ativo, 2/3 = Sequência de limpeza
-BOSS_BULLET_DIR:      .word 0          # 1=Cima, 2=Baixo, 3=Esquerda, 4=Direita
-BOSS_FIRE_COUNT:      .word 0          # Cronômetro/Timer para controlar a cadência de tiro do Boss
-BOSS_FIRE_RATE:       .word 300        # Intervalo entre os tiros do Boss (ajustável)
+#TIRO DO CHEFAO
+BOSS_BULLET_POS:      .half 0, 0       # Coordenadas do chefao
+OLD_BOSS_BULLET_POS:  .half 0, 0       # Rastro do tiro do chefao
+BOSS_BULLET_ACTIVE:   .word 0          # Ativo ou inativo
+BOSS_BULLET_DIR:      .word 0          # Direcao 1=Cima, 2=Baixo, 3=Esquerda, 4=Direita
+BOSS_FIRE_COUNT:      .word 0          
+BOSS_FIRE_RATE:       .word 300        # EDITAVEL!! Intervalo de frames entre os tiros
 
-#Vidas do player/jogador
-PLAYER_LIVES:	.word 3				# Vidas do jogador (Comeca com 3)
+#VIDAS DO PLAYER
+PLAYER_LIVES:	.word 3				# EDITAVEL!! Vidas do jogador
 PLAYER_DEATH_POS:     .half 0, 0    		# Guarda as coordenadas de onde o player morreu
 PLAYER_RESPAWN_COUNT: .word 0    		# Limpa os frames das coordenadas de onde o player morreu
 
-#Ataque dos inimigos
+#ATAQUE DOS INIMIGOS
 ENEMY_DEATH_POS:      .half 0, 0    		# Guarda onde o inimigo bateu no player
 ENEMY_PENULTIMA_POS:  .half 0, 0		# Guarda a ultima posicao antes do inimigo bater no player
 ENEMY_RESPAWN_COUNT:  .word 0    		# Contador de 2 frames para limpar o fantasma do inimigo
 
-#Ultima direcao do jogador (para definir a direcao do tiro)
-CHAR_LOOK_DIR:   .word 4               # 1=Cima, 2=Baixo, 3=Esquerda, 4=Direita (Padrão: Direita)
+#ULTIMA DIRECAO DO JOGADO (define a direcao do tiro)
+CHAR_LOOK_DIR:   .word 4               # 1=Cima, 2=Baixo, 3=Esquerda, 4=Direita (Padrï¿½o: Direita)
 
-#Sistema de tiro
-BULLET_POS:	.half 0, 0			# Posição X, Y do tiro
-OLD_BULLET_POS:	.half 0, 0			# Rastro do tiro
-BULLET_ACTIVE:	.word 0				# 0 = Inativo, 1 = Ativo na tela
-BULLET_DIR:	.word 0				# Para onde o tiro está voando
+#SISTEMA DE TIRO
+BULLET_POS:	.half 0, 0			#X e Y do tiro
+OLD_BULLET_POS:	.half 0, 0			# Rastro
+BULLET_ACTIVE:	.word 0				# Ativo ou inativo
+BULLET_DIR:	.word 0				# Direcao
 
 .text
 
-HISTORIA:	# --- EXIBE A TELA DA HISTÓRIA 1 ---
-	        la a0, comecotxt        # Endereço da imagem/texto da história 1
+HISTORIA:	
+	        la a0, comecotxt        # EndereÃ§o da imagem
 	        li a1, 0                # X = 0
 	        li a2, 0                # Y = 0
 	        li a3, 0                
 	        call PRINT
 	        li a3, 1                
 	        call PRINT
-	        call WAIT_SPACE         # Trava o jogo até o jogador apertar Espaço
-	        # --- EXIBE A TELA DA HISTÓRIA 2 ---
-	        la a0, ajudatxt         # Endereço da imagem/texto da história 2
+	        
+	        call WAIT_SPACE_WITH_MUSIC #Espera e toca mÃºsica
+	        
+	        la a0, ajudatxt         # EndereÃ§o da imagem/texto da histÃ³ria 2
 	        li a1, 0
 	        li a2, 0
 	        li a3, 0
 	        call PRINT
 	        li a3, 1
 	        call PRINT
-	        call WAIT_SPACE         # Trava o jogo até o jogador apertar Espaço novamente
-	        # --- LIMPA A TELA REDESENHANDO O MAPA ANTES DE INICIAR O JOGO ---
+	        
+	        call WAIT_SPACE_WITH_MUSIC #Espera e toca mÃºsica na tela 2
+
 	        j SETUP
 
 
-# Esse setup serve pra desenhar o mapa 1 nos dois frames antes do "jogo" comecar
+# Esse setup serve pra desenhar o mapa 1 nos dois frames antes do jogo comecar
 SETUP:		la t0, MATRIZ_MAPA1
 		la t1, CURRENT_MAP_MATRIX
 		sw t0, 0(t1)
@@ -111,8 +118,8 @@ SETUP:		la t0, MATRIZ_MAPA1
 		la t1, CURRENT_MAP_BG
 		sw t0, 0(t1)
 
-		# Desenha o fundo inicial baseado no ponteiro dinâmico
-		lw a0, 0(t1)			# Carrega o MAPA1
+		# Desenha o fundo inicial (o mapa 1)
+		lw a0, 0(t1)
 		li a1,0				
 		li a2,0				
 		li a3,0				
@@ -123,19 +130,15 @@ SETUP:		la t0, MATRIZ_MAPA1
 GAME_LOOP:	
 		call KEY2			# Tecla do jogador para mover o player
 
-		call MOVE_BULLET		# Movimentacao do tiro
+		call MOVE_BULLET		
 		call MOVE_BOSS_BULLET
-		call VERIFICA_DANO_PLAYER	# Checa se as coordenadas do inimigo sao iguais a do player	
-		call VERIFICA_MUDANCA_FASE   	# Sempre de olho se o player passou de fase
+		call VERIFICA_DANO_PLAYER		
+		call VERIFICA_MUDANCA_FASE   	
 		call VERIFICA_DANO_BOSS
 		
-		# --- TROCA DE FRAME ANTES DAS RENDERIZAÇÕES ---
-		xori s0, s0, 1			# Inverte o frame atual (Double Buffering perfeito)
+		xori s0, s0, 1			# Inverte o frame atual
 		
-		# =========================================================
-		# PROCESSAMENTO DA DUPLA DE INIMIGOS
-		# =========================================================
-		# --- PROCESSA INIMIGO A (Move e Desenha) ---
+		#PROCESSA INIMIGO A
 		la a0, ENEMY_A_POS          
 		la a1, ENEMY_A_OLD_POS      
 		la a2, ENEMY_A_ACTIVE       
@@ -143,7 +146,7 @@ GAME_LOOP:
 		la a4, ENEMY_A_COUNT              
 		call ATUALIZA_INIMIGO
 		
-		# --- PROCESSA INIMIGO B (Move e Desenha) ---
+		#PROCESSA INIMIGO B
 		la a0, ENEMY_B_POS          
 		la a1, ENEMY_B_OLD_POS      
 		la a2, ENEMY_B_ACTIVE       
@@ -151,45 +154,43 @@ GAME_LOOP:
 		la a4, ENEMY_B_COUNT           
 		call ATUALIZA_INIMIGO
 		
-		# --- CHEFÃO DO MAPA 3 ---
+		#CHEFAO DO MAPA 3
 		call ATUALIZA_BOSS
-		# =========================================================
 		
-		# --- DESENHA PERSONAGEM ---
+		#DESENHA PERSONAGEM
 		la t0, CHAR_POS			
-		la a0, char			
+		la a0, padre1			
 		lh a1, 0(t0)			
 		lh a2, 2(t0)			
 		mv a3, s0			
 		call PRINT
 		
-		# --- DESENHA VIDA (Loop Dinâmico com Limpeza) ---
+		#DESENHA VIDA
             	la t0, HEART_POS            
-	        lh a1, 0(t0)                 # a1 = X inicial (0)
-	        lh a2, 2(t0)                 # a2 = Y inicial (0)
-	        li t1, 3                     # t1 = Máximo de vidas possíveis (para limpar o rastro)
+	        lh a1, 0(t0)
+	        lh a2, 2(t0)    
+	        li t1, 3                
         	LOOP_LIMPA_CORACOES:
-            	# Salva registradores antes do PRINT
+          
             	addi sp, sp, -12
             	sw t1, 8(sp)
             	sw a2, 4(sp)
             	sw a1, 0(sp)
-            	# Carrega a textura de fundo ou grama para cobrir o coração antigo
-            	# DICA: Substitua 'cenario1_grama' pela textura que faz sentido ficar atrás da HUD
+            	# Carrega a textura de fundo ou grama para cobrir o coraï¿½ï¿½o antigo
             	la a0, preto   
-            	mv a3, s0                    # Limpa apenas no frame invertido atual (s0)
+            	mv a3, s0                 
             	call PRINT
-            	# Restaura e avança para a próxima posição
+
             	lw a1, 0(sp)
             	lw a2, 4(sp)
             	lw t1, 8(sp)
             	addi sp, sp, 12
-            	addi a1, a1, 16              # Avança X para a próxima posição de coração
-            	addi t1, t1, -1              # Decrementa o limpador
+            	addi a1, a1, 16           
+            	addi t1, t1, -1           
             	bnez t1, LOOP_LIMPA_CORACOES
-        	# --- AGORA DESENHA OS CORAÇÕES ATIVOS ---
-            	lw t1, PLAYER_LIVES          # t1 = Quantidade de vidas atuais (ex: 2)
-            	blez t1, FIM_DESENHO_VIDA    # Se vida <= 0, não desenha nada
+        	# --- AGORA DESENHA OS CORAï¿½ï¿½ES ATIVOS ---
+            	lw t1, PLAYER_LIVES          # t1 = Quantidade de vidas atuais
+            	blez t1, FIM_DESENHO_VIDA    # Se vida <= 0, nao desenha nada
             	la t0, HEART_POS            
             	lh a1, 0(t0)                 # Reseta X para 0
             	lh a2, 2(t0)                 # Reseta Y para 0
@@ -198,11 +199,11 @@ GAME_LOOP:
             	sw t1, 8(sp)
             	sw a2, 4(sp)
             	sw a1, 0(sp)
-            	# Desenha o coração no Buffer atual (s0) para acompanhar o ritmo do jogo
-            	la a0, vermelho              
+
+            	la a0, plumbbob              
             	mv a3, s0                    
             	call PRINT
-            	# Restaura e avança
+
             	lw a1, 0(sp)
             	lw a2, 4(sp)
             	lw t1, 8(sp)
@@ -212,18 +213,18 @@ GAME_LOOP:
             	bnez t1, LOOP_CORACOES       
 		FIM_DESENHO_VIDA:			
 		
-		# --- DESENHA TIRO ---	
+		#DESENHA TIRO
 		call DESENHA_BULLET
 		call DESENHA_BOSS_BULLET		
 		
-		# --- EXIBE O FRAME ATUALIZADO NO DISPLAY ---
+		#EXIBE O FRAME NO DISPLAY
 		li t0, 0xFF200604		
 		sw s0, 0(t0)			
 		
-		# --- LIMPEZA DE RASTROS NO FRAME INVERSO ---
+		# LIMPEZA DE RASTROS NO FRAME INVERSO
 		call LIMPA_RASTRO_PLAYER	
 		
-		# --- LIMPA RASTRO DOS DOIS INIMIGOS ---
+		#LIMPA RASTRO DOS DOIS INIMIGOS
 		la a0, ENEMY_A_OLD_POS
 		la a1, ENEMY_A_ACTIVE
 		call LIMPA_RASTRO_INIMIGO
@@ -234,7 +235,7 @@ GAME_LOOP:
 		
 		call LIMPA_RASTRO_BOSS
 		
-		# --- LIMPA RASTRO DOS TIROS ---
+		# LIMPA RASTRO DOS TIROS
 		call LIMPA_RASTRO_BULLET
 		call LIMPA_RASTRO_BOSS_BULLET	
 
@@ -265,12 +266,13 @@ FIM: 		li a0, 10
 .include "historia/derrotatxt.s"
 
 #Anexo de texturas
-.include "sprites/char.s"
-.include "sprites/inimigoA.s"
-.include "sprites/inimigoB.s"
-.include "sprites/chefao.s"
+.include "sprites/padre1.s"
 
-.include "texturas/vermelho.s"
+.include "sprites/ghost1.s"
+.include "sprites/alien1.s"
+.include "sprites/chefao1.s"
+
+.include "texturas/plumbbob.s"
 .include "texturas/preto.s"
 
 .include "texturas/cenario1_pedra_esquerda.s"
@@ -279,9 +281,9 @@ FIM: 		li a0, 10
 .include "texturas/cenario1_escada_direita.s"
 
 
-.include "texturas/cenario2_branco.s"
+.include "armas/terco_padre.s"
 .include "texturas/cenario2_piso.s"
 
 
 .include "texturas/cenario3_piso.s"
-.include "texturas/chefao_tiro.s"
+.include "armas/cajado_chefao.s"

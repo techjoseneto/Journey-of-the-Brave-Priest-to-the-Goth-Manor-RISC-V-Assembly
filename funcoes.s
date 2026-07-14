@@ -2,27 +2,26 @@
 # funcoes.s - Todas as subrotinas do jogo reunidas
 # =================================================================
 .text
-
 # =================================================================
 # SISTEMA DE TECLADO E ENTRADA (JOGADOR)
 # =================================================================
-WAIT_SPACE:	li t1, 0xFF200000         # Carrega o endereço de controle do SEU teclado
+WAIT_SPACE:	li t1, 0xFF200000        
 
 WAIT_SPACE_LOOP:
-	        lw t0, 0(t1)              # Lê o bit de controle
-	        andi t0, t0, 0x0001       # Mascara o bit menos significativo
-	        beq t0, zero, WAIT_SPACE_LOOP # Se não há tecla, fica em loop esperando (trava a tela)
+	        lw t0, 0(t1)              # Le o bit de controle
+	        andi t0, t0, 0x0001     
+	        beq t0, zero, WAIT_SPACE_LOOP # Se nao ha tecla, trava a tela
 	        
-	        lw t2, 4(t1)              # Lê o valor da tecla pressionada
-	        li t0, 32                 # Código ASCII da barra de Espaço
+	        lw t2, 4(t1)              # Le o valor da tecla pressionada
+	        li t0, 32                 # Codigo ASCII da barra de Espaï¿½o
 	        bne t2, t0, WAIT_SPACE_LOOP # Se pressionou outra tecla, ignora e continua esperando
 	        
-	        ret                       # Se for Espaço, avança!
+	        ret                       # Se for Espaco
 	    	ret
 
 KEY2:		li t1,0xFF200000		# carrega o endereco de controle do KDMMIO
 		lw t0,0(t1)			# Le bit de Controle Teclado
-		andi t0,t0,0x0001		# mascara o bit menos significativo
+		andi t0,t0,0x0001		
 		beq t0,zero,FIM_KEY		# Se nao ha tecla pressionada entao vai para FIM_KEY
 		lw t2,4(t1) 			# le o valor da tecla tecla
 		
@@ -46,13 +45,13 @@ FIM_KEY:	ret				# retorna para o main
 ATIRA:		
 		la t0, BULLET_ACTIVE
 		lw t1, 0(t0)
-		bne t1, zero, FIM_KEY		# Se já tem um tiro na tela, não faz nada (impede metralhadora)
+		bne t1, zero, FIM_KEY		# Se ja tem um tiro na tela, nao faz nada
 		
-		# Ativa o tiro!
+		# Ativa o tiro
 		li t1, 1
 		sw t1, 0(t0)			# BULLET_ACTIVE = 1
 		
-		# Copia a direção atual do personagem para o tiro
+		# Copia a direcao atual do personagem para o tiro
 		la t0, CHAR_LOOK_DIR
 		lw t1, 0(t0)
 		la t2, BULLET_DIR
@@ -67,7 +66,7 @@ ATIRA:
 		j FIM_KEY
 
 # =================================================================
-# MOVIMENTAÇÃO E COLISÃO DO JOGADOR
+# MOVIMENTACAO E COLISAO DO JOGADOR
 # =================================================================
 CHAR_ESQ:	la t0,CHAR_POS			
 		lh t1,0(t0)			
@@ -81,7 +80,7 @@ CHAR_ESQ:	la t0,CHAR_POS
 		add t3,t3,t4			
 		
 		la t4, CURRENT_MAP_MATRIX		
-		lw t4, 0(t4)			# Le dinamicamente a matriz da fase ativa
+		lw t4, 0(t4)			# Le A matriz da fase ativa
 		add t4, t4, t3			
 		lbu t5, 0(t4)			# t5 = Bloco atual
 		
@@ -112,7 +111,7 @@ CHAR_DIR:	la t0,CHAR_POS
 		add t3,t3,t4			
 		
 		la t4, CURRENT_MAP_MATRIX		
-		lw t4, 0(t4)			# Le dinamicamente a matriz da fase ativa
+		lw t4, 0(t4)			# Le a matriz da fase ativa
 		add t4, t4, t3			
 		lbu t5, 0(t4)			# t5 = Bloco atual
 		
@@ -143,7 +142,7 @@ CHAR_CIMA:	la t0,CHAR_POS
 		add t3,t3,t4			
 		
 		la t4, CURRENT_MAP_MATRIX		
-		lw t4, 0(t4)			# Le dinamicamente a matriz da fase ativa
+		lw t4, 0(t4)			# Le a matriz da fase ativa
 		add t4, t4, t3			
 		lbu t5, 0(t4)			# t5 = Bloco atual
 		
@@ -174,7 +173,7 @@ CHAR_BAIXO:	la t0,CHAR_POS
 		add t3,t3,t4			
 		
 		la t4, CURRENT_MAP_MATRIX		
-		lw t4, 0(t4)			# Le dinamicamente a matriz da fase ativa
+		lw t4, 0(t4)			# Le a matriz da fase ativa
 		add t4, t4, t3			
 		lbu t5, 0(t4)			# t5 = Bloco atual
 		
@@ -194,33 +193,28 @@ CHAR_BAIXO:	la t0,CHAR_POS
 FIM_MOVE_BAIXO:	ret
 
 # =================================================================
-# MOVIMENTAÇÃO DO INIMIGO
-# =================================================================
-# =================================================================
-# ATUALIZA_INIMIGO)
+# MOVIMENTAï¿½ï¿½O DOs INIMIGOS
 # =================================================================
 ATUALIZA_INIMIGO:
-		# 1. Só processa se o inimigo estiver puramente ativo/vivo (== 1)
+		# Verifica se o inimigo esta ativo
 		lw t1, 0(a2)
 		li t2, 1
 		bne t1, t2, FIM_ATUALIZA_INIMIGO
 		
-		# 2. CONTROLE DE VELOCIDADE INDIVIDUAL
-		# Carrega, incrementa e salva o contador específico passado em a4
+		# Carrega, incrementa e salva o contador especï¿½fico passado em a4
 		lw t1, 0(a4)
 		addi t1, t1, 1
 		sw t1, 0(a4)			
 
 		la t2, ENEMY_SPEED
 		lw t2, 0(t2)
-		blt t1, t2, EXECUTA_DESENHO_ENEMY # Se não deu o tempo, pula movimento e só desenha
+		blt t1, t2, EXECUTA_DESENHO_ENEMY # Se nao deu tempo, pula o movimento
 		
-		# Se chegou aqui, deu o tempo de andar! Zera o contador individual deste inimigo
+		# Se chegou aqui, deu tempo de fazer o movimento
 		sw zero, 0(a4)			
 
 CONTINUA_IA:
 		# Salva os argumentos na pilha antes do processamento
-		# Incluímos o a4 na pilha para garantir que ele não se perca se houver subchamadas
 		addi sp, sp, -24
 		sw ra, 0(sp)
 		sw a0, 4(sp)
@@ -280,9 +274,6 @@ RESTAURA_PILHA_ENEMY:
 		lw a4, 20(sp)
 		addi sp, sp, 24
 
-# -----------------------------------------------------------------
-# RENDERIZAÇÃO ESTÁVEL DO SPRITE (Mantida igual)
-# -----------------------------------------------------------------
 EXECUTA_DESENHO_ENEMY:
 		addi sp, sp, -4
 		sw ra, 0(sp)
@@ -292,12 +283,12 @@ EXECUTA_DESENHO_ENEMY:
 
 USA_SPRITE_B:
 		mv t0, a0 
-		la a0, inimigoB	
+		la a0, ghost1
 		j PRONTO_PARA_DESENHAR
 
 USA_SPRITE_A:
 		mv t0, a0
-		la a0, inimigoA			
+		la a0, alien1		
 
 PRONTO_PARA_DESENHAR:
 		lh a1, 0(t0)			
@@ -311,7 +302,7 @@ FIM_ATUALIZA_INIMIGO:
 		ret
 
 # =================================================================
-# LIMPEZA DE RASTRO (PLAYER E INIMIGO)
+# LIMPEZA DE RASTRO (PLAYER E INIMIGOS)
 # =================================================================
 LIMPA_RASTRO_PLAYER:
 		# Verifica se o player acabou de renascer (necessita de limpeza dupla da morte)
@@ -319,7 +310,7 @@ LIMPA_RASTRO_PLAYER:
 		lw t1, 0(t0)
 		blez t1, LIMPA_RASTRO_NORMAL_PLAYER	# Se for 0, segue o rastro normal de movimento
 		
-		# --- CASO ESPECIAL: LIMPANDO O FANTASMA DA MORTE ---
+		#CASO ESPECIAL: LIMPANDO O "FANTASMA" DA MORTE
 		addi t1, t1, -1
 		sw t1, 0(t0)				# Decrementa o contador (2 -> 1 -> 0)
 		
@@ -344,12 +335,12 @@ EXECUTA_LIMPEZA_PLAYER:
 
 # =================================================================
 # LIMPA RASTRO INIMIGO
-# Entradas:
-#   a0 = Endereço de ENEMY_X_OLD_POS (ex: la a0, ENEMY_A_OLD_POS)
-#   a1 = Endereço de ENEMY_X_ACTIVE  (ex: la a1, ENEMY_A_ACTIVE)
+# Inputs:
+#   a0 = Endereï¿½o de ENEMY_X_OLD_POS (ex: la a0, ENEMY_A_OLD_POS)
+#   a1 = Endereï¿½o de ENEMY_X_ACTIVE  (ex: la a1, ENEMY_A_ACTIVE)
 # =================================================================
 LIMPA_RASTRO_INIMIGO:
-		# Verifica se o inimigo (globalmente) acabou de atacar o player
+		# Verifica se o inimigo acabou de atacar o player
 		la t0, ENEMY_RESPAWN_COUNT
 		lw t1, 0(t0)
 		blez t1, LOGICA_PADRAO_ENEMY	# Se for 0, segue o jogo normal
@@ -376,29 +367,29 @@ LIMPA_RASTRO_INIMIGO:
 		ret					
 
 LOGICA_PADRAO_ENEMY:
-		# Lê o estado de atividade DESTE inimigo específico (usando a1)
+		# Le o estado de atividade DESTE inimigo especï¿½fico
 		lw t1, 0(a1)
-		beq t1, zero, FIM_RASTRO_ENEMY	# Se for 0 (morto definitivo), não limpa nada
+		beq t1, zero, FIM_RASTRO_ENEMY	# Se for 0, nao limpa nada
 		
 		# Salva na pilha os registradores de argumento que vamos precisar depois
 		addi sp, sp, -12
 		sw ra, 0(sp)
-		sw a1, 4(sp)        # Guarda o endereço do ACTIVE
+		sw a1, 4(sp)        # Guarda o endereï¿½o do ACTIVE
 		sw t1, 8(sp)        # Guarda o valor atual do ACTIVE
 
-		# Carrega a coordenada antiga DESTE inimigo específico (usando a0)
+		# Carrega a coordenada antiga DESTE inimigo especï¿½fico (usando a0)
 		lh a1, 0(a0)			
 		lh a2, 2(a0)			
 
-		call ENCONTRA_TEXTURA		# Redesenha o chão na posição antiga
+		call ENCONTRA_TEXTURA		# Redesenha o chao na posicao antiga
 		
 		# Recupera os dados da pilha
 		lw ra, 0(sp)
-		lw a1, 4(sp)        # Endereço do ACTIVE deste inimigo
+		lw a1, 4(sp)        # Endereco do ACTIVE deste inimigo
 		lw t1, 8(sp)        # Valor do ACTIVE deste inimigo
 		addi sp, sp, 12
 
-		# --- MÁQUINA DE ESTADOS DO RASTRO DE MORTE DESTE INIMIGO ---
+		#MAQUINA DE ESTADOS DO RASTRO DE MORTE DESTE INIMIGO
 		li t2, 2
 		beq t1, t2, ENEMY_VA_PARA_3	
 		li t2, 3
@@ -412,11 +403,10 @@ ENEMY_VA_PARA_3:
 		j FIM_RASTRO_ENEMY
 
 ENEMY_VA_PARA_0:
-		sw zero, 0(a1)			# Desativa este inimigo de vez (0) após limpar todos os frames
+		sw zero, 0(a1)			# Desativa este inimigo de vez (0) apos limpar todos os frames
 
 FIM_RASTRO_ENEMY:
 		ret
-		
 		
 # =================================================================
 # FUNCAO QUE DEFINE A TEXTURA A SUBSTITUIR APOS O PLAYER SE MOVER
@@ -431,9 +421,9 @@ ENCONTRA_TEXTURA:
 		la t4, CURRENT_MAP_MATRIX
 		lw t4, 0(t4)
 		add t4, t4, t3
-		lbu t5, 0(t4)			# t5 = Código do bloco na matriz
+		lbu t5, 0(t4)			# t5 = Codigo do bloco na matriz
 		
-		# Checa qual fase está ativa para escolher o grupo de texturas
+		# Checa qual fase esta ativa para escolher o grupo de texturas
 		la t4, CURRENT_LEVEL
 		lw t4, 0(t4)
 		li t6, 2
@@ -442,7 +432,7 @@ ENCONTRA_TEXTURA:
 		beq t4, t6, TEXTURAS_FASE3
 		
 TEXTURAS_FASE1:
-		# --- CORREÇÃO: Aponta para as rotinas de desenho corretas ---
+		# Aponta para as rotinas de desenho
 		li t6, 12
 		beq t5, t6, TXT_M1_CAMINHO_ESQ
 		li t6, 13
@@ -452,16 +442,14 @@ TEXTURAS_FASE1:
 		li t6, 15
 		beq t5, t6, TXT_M1_ESCADA_DIR
 
-		# Padrão de segurança: caso seja a calçada (11) ou porta (19) 
-		# onde não salvamos texturas específicas de rastro ainda
-		la a0, MAPA1 # Recarrega do fundo original se for bloco padrão
+		la a0, MAPA1
 		j DESENHA_RASTRO
 
 TXT_M1_CAMINHO_ESQ:
-		la a0, cenario1_pedra_esquerda    # Sprite metade pedra/metade grama (Esquerda)
+		la a0, cenario1_pedra_esquerda    # Sprite metade pedra (Esquerda)
 		j DESENHA_RASTRO
 TXT_M1_CAMINHO_DIR:
-		la a0, cenario1_pedra_direita     # Sprite metade pedra/metade grama (Direita)
+		la a0, cenario1_pedra_direita     # Sprite metade pedra (Direita)
 		j DESENHA_RASTRO
 TXT_M1_ESCADA_ESQ:
 		la a0, cenario1_escada_esquerda   # Sprite do degrau esquerdo
@@ -471,11 +459,10 @@ TXT_M1_ESCADA_DIR:
 		j DESENHA_RASTRO
 		
 TEXTURAS_FASE2:
-		# CORREÇÃO: Aponta para as labels de código corretas (TXT_M2_...)
 		li t6, 21
 		beq t5, t6, TXT_M2_PISO
 		
-		la a0, cenario2_piso		# Padrão de segurança caso passe em cima de outro valor
+		la a0, cenario2_piso
 		j DESENHA_RASTRO
 
 TXT_M2_PISO:        la a0, cenario2_piso		
@@ -500,23 +487,22 @@ DESENHA_RASTRO:
 # =================================================================
 # MECANICA DO TIRO
 # =================================================================
-
 MOVE_BULLET:
 		la t0, BULLET_ACTIVE
 		lw t1, 0(t0)
 		li t2, 1
-		bne t1, t2, FIM_MOVE_BULLET	# Só calcula movimento se o tiro estiver ativo (1)
+		bne t1, t2, FIM_MOVE_BULLET	# So calcula movimento se o tiro estiver ativo (1)
 		
-		# Salva a posição atual como ANTIGA antes de aplicar a velocidade
+		# Salva a posiï¿½ï¿½o atual como ANTIGA antes de aplicar a velocidade
 		la t0, BULLET_POS
 		lw t1, 0(t0)
 		la t2, OLD_BULLET_POS
 		sw t1, 0(t2)
 
-		lh t3, 0(t0)			# t3 = Projétil X
-		lh t4, 2(t0)			# t4 = Projétil Y
+		lh t3, 0(t0)			# t3 = Projetil X
+		lh t4, 2(t0)			# t4 = Projetil Y
 
-		# Identifica a direção do tiro
+		# Direcao do tiro
 		la t0, BULLET_DIR
 		lw t1, 0(t0)
 
@@ -539,23 +525,23 @@ B_ESQ:		addi t3, t3, -16
 B_DIR:		addi t3, t3, 16
 
 # -----------------------------------------------------------------
-#  DETECÇÃO DE IMPACTO DUPLA
+#  DETECCAO DE IMPACTO
 # -----------------------------------------------------------------
 CHK_B_COLISAO: 					
-		# --- TESTA COLISÃO COM INIMIGO A ---
+		#TESTA COLISï¿½O COM INIMIGO A
 		la t0, ENEMY_A_ACTIVE
 		lw t1, 0(t0)
 		li t2, 1
-		bne t1, t2, CHK_BULLET_INIMIGO_B # Se o A não está ativo jogável, testa o B
+		bne t1, t2, CHK_BULLET_INIMIGO_B # Se o A nï¿½o esta ativo, testa o B
 		
 		la t0, ENEMY_A_POS
 		lh t1, 0(t0)			# t1 = Inimigo A X
 		lh t2, 2(t0)			# t2 = Inimigo A Y
 		
-		bne t3, t1, CHK_BULLET_INIMIGO_B # Se X não bateu, testa o B
-		bne t4, t2, CHK_BULLET_INIMIGO_B # Se Y não bateu, testa o B
+		bne t3, t1, CHK_BULLET_INIMIGO_B # Se X nï¿½o bateu, testa o B
+		bne t4, t2, CHK_BULLET_INIMIGO_B # Se Y nï¿½o bateu, testa o B
 		
-		# HOUVE IMPACTO NO INIMIGO A!
+		# HOUVE IMPACTO NO INIMIGO A
 		la a0, ENEMY_A_POS
 		la a1, ENEMY_A_OLD_POS
 		la a2, ENEMY_A_ACTIVE
@@ -563,11 +549,11 @@ CHK_B_COLISAO:
 		j EXECUTA_DANO_INIMIGO
 
 CHK_BULLET_INIMIGO_B:
-		# --- TESTA COLISÃO COM INIMIGO B ---
+		# TESTA COLISï¿½O COM INIMIGO B
 		la t0, ENEMY_B_ACTIVE
 		lw t1, 0(t0)
 		li t2, 1
-		bne t1, t2, CHK_PAREDE_BULLET	# Se o B também não está ativo, pula pro cenário
+		bne t1, t2, CHK_PAREDE_BULLET	# Se o B tambï¿½m nï¿½o esta ativo, pula pro cenario
 		
 		la t0, ENEMY_B_POS
 		lh t1, 0(t0)			# t1 = Inimigo B X
@@ -583,12 +569,11 @@ CHK_BULLET_INIMIGO_B:
 		la a3, ENEMY_B_LIVES
 
 EXECUTA_DANO_INIMIGO:
-		# Desativa o tiro (joga para animação de explosão 2)
+		# Desativa o tiro
 		la t0, BULLET_ACTIVE
 		li t1, 2
 		sw t1, 0(t0)
 		
-		# Protege registradores na pilha e processa o Respawn/Morte
 		addi sp, sp, -4
 		sw ra, 0(sp)
 		call RESPAWN_INIMIGO
@@ -598,7 +583,7 @@ EXECUTA_DANO_INIMIGO:
 		j FIM_MOVE_BULLET		# Encerra o frame do tiro
 
 # -----------------------------------------------------------------
-#  COLISÃO COM CENÁRIO E PAREDES
+#  COLISAO COM CENARIO E PAREDES
 # -----------------------------------------------------------------
 CHK_PAREDE_BULLET:
 		blt t3, zero, B_MORRE
@@ -639,58 +624,58 @@ FIM_MOVE_BULLET:
 		
 		
 # =================================================================
-# SUB-ROTINA: RESPAWN_INIMIGO
+# RESPAWN_INIMIGO
 # Entradas passadas pelo impacto do tiro:
-#   a0 = Endereço de ENEMY_X_POS
-#   a1 = Endereço de ENEMY_X_OLD_POS
-#   a2 = Endereço de ENEMY_X_ACTIVE
-#   a3 = Endereço de ENEMY_X_LIVES
+#   a0 = Endereï¿½o de ENEMY_X_POS
+#   a1 = Endereï¿½o de ENEMY_X_OLD_POS
+#   a2 = Endereï¿½o de ENEMY_X_ACTIVE
+#   a3 = Endereï¿½o de ENEMY_X_LIVES
 # =================================================================
 RESPAWN_INIMIGO:
-		# 1. Soma +1 no contador de baixas gerais da Fase 2
+		# 1. Soma +1 no contador de mortes da Fase 2
 		la t0, TOTAL_DEFEATED
 		lw t1, 0(t0)
 		addi t1, t1, 1
 		sw t1, 0(t0)
 
-		# 2. Reduz 1 vida deste inimigo específico
+		# 2. Reduz 1 vida deste inimigo especifico
 		lw t1, 0(a3)			# t1 = vidas restantes
 		addi t1, t1, -1
-		sw t1, 0(a3)			# Atualiza na memória
+		sw t1, 0(a3)			# Atualiza na memoria
 		
-		# Força o rastro antigo a ser onde ele acabou de ser baleado (para limpar frame)
+		# Forca o rastro antigo a ser onde ele acabou de ser baleado (para limpar frame)
 		lw t2, 0(a0)
 		sw t2, 0(a1)
 
 		# Se as vidas DESTE inimigo zeraram, ele morre em definitivo
 		bnez t1, FAZ_TELETRANSPORTE_RESPAWN
 		
-		# --- CASO: MORTE DEFINITIVA ---
+		# MORTE DEFINITIVA
 		li t2, 2
-		sw t2, 0(a2)			# Joga ACTIVE para estado 2 (Inicia sequência de sumiço)
+		sw t2, 0(a2)			# Joga ACTIVE para estado 2
 		ret
 
-		# --- CASO: RENASCIMENTO EM NOVO PONTO ---
+		# RENASCIMENTO EM NOVO PONTO
 FAZ_TELETRANSPORTE_RESPAWN:
-		# Descobre qual é o próximo ponto de spawn da lista (0, 1, 2 ou 3)
+		# Descobre qual e o prï¿½ximo ponto de spawn da lista (0, 1, 2 ou 3)
 		la t0, SPAWN_INDEX
-		lw t1, 0(t0)			# t1 = índice atual (0 a 3)
+		lw t1, 0(t0)			# t1 = ï¿½ndice atual (0 a 3)
 		
 		# Calcula o deslocamento na tabela SPAWN_POINTS (Cada ponto tem 4 bytes: .half X, Y)
-		slli t2, t1, 2			# t2 = índice * 4
+		slli t2, t1, 2			# t2 = ï¿½ndice * 4
 		la t3, SPAWN_POINTS
-		add t3, t3, t2			# t3 = Endereço exato do par X,Y escolhido
+		add t3, t3, t2			# t3 = Endereco exato do par X,Y escolhido
 		
 		# Carrega as novas coordenadas de spawn
 		lh t4, 0(t3)			# Novo X
 		lh t5, 2(t3)			# Novo Y
 		
-		# Aplica o teletransporte instantâneo no inimigo!
+		# Aplica o teletransporte instantï¿½neo no inimigo!
 		sh t4, 0(a0)
 		sh t5, 2(a0)
 		
-		# Atualiza o SPAWN_INDEX para que o PRÓXIMO inimigo que morrer nasça em outro lugar
-		addi t1, t1, 1			# Próximo índice
+		# Atualiza o SPAWN_INDEX para que o PRï¿½XIMO inimigo que morrer nasï¿½a em outro lugar
+		addi t1, t1, 1			# Prï¿½ximo ï¿½ndice
 		li t2, 4
 		blt t1, t2, SALVA_INDEX
 		li t1, 0			# Se passou de 3, volta para o ponto 0 (Loop circular)
@@ -698,15 +683,15 @@ SALVA_INDEX:
 		sw t1, 0(t0)
 		ret	
 
-# --- DESENHO DO TIRO ---
+# DESENHO DO TIRO
 DESENHA_BULLET:
 		la t0, BULLET_ACTIVE
 		lw t1, 0(t0)
 		li t2, 1
-		bne t1, t2, FIM_DRAW_BULLET	# Só desenha se estiver puramente ativo (1)
+		bne t1, t2, FIM_DRAW_BULLET	# Sï¿½ desenha se estiver puramente ativo (1)
 
 		la t0, BULLET_POS
-		la a0, cenario2_branco			# SUA TEXTURA: Quadrado branco temporário
+		la a0, terco			
 		lh a1, 0(t0)
 		lh a2, 2(t0)
 		mv a3, s0			# Passa o frame atual
@@ -720,31 +705,30 @@ DESENHA_BULLET:
 FIM_DRAW_BULLET:
 		ret
 
-# --- LIMPEZA DE RASTRO DO TIRO (INTEGRADO AO SISTEMA COMPARTILHADO) ---
+# LIMPEZA DE RASTRO DO TIRO
 LIMPA_RASTRO_BULLET:
 		la t0, BULLET_ACTIVE
 		lw t1, 0(t0)
-		beq t1, zero, FIM_RASTRO_BULLET	# Se for 0 (Totalmente inativo), não faz nada
+		beq t1, zero, FIM_RASTRO_BULLET	# Se for 0 (Totalmente inativo), nï¿½o faz nada
 		
-		# Guardamos o estado na pilha para decidir o pós-limpeza
 		addi sp, sp, -4
 		sw t1, 0(sp)
 
-		# Prepara os parâmetros usando a posição antiga do tiro
+		# Prepara os parï¿½metros usando a posiï¿½ï¿½o antiga do tiro
 		la t0, OLD_BULLET_POS
 		lh a1, 0(t0)
 		lh a2, 2(t0)
 		
 		addi sp, sp, -4
 		sw ra, 0(sp)
-		call ENCONTRA_TEXTURA		# Executa o mapeador do cenário compartilhado
+		call ENCONTRA_TEXTURA		# Executa o mapeador do cenï¿½rio compartilhado
 		lw ra, 0(sp)
 		addi sp, sp, 4
 
 		lw t1, 0(sp)
 		addi sp, sp, 4
 
-		# --- SISTEMA DE LIMPEZA DUPLA (DOUBLE BUFFERING) ---
+		# SISTEMA DE LIMPEZA DUPLA
 		li t2, 2
 		beq t1, t2, BULLET_VA_PARA_3
 		li t2, 3
@@ -804,36 +788,35 @@ PRINT_LINHA:	lw t6,0(t1)
 # SISTEMA DE DANO E VIDAS (PLAYER VS INIMIGO DUPLO)
 # =================================================================
 VERIFICA_DANO_PLAYER:
-		# Coordenadas atuais do player (comum para os testes)
+		# Coordenadas atuais do player
 		la t0, CHAR_POS
 		lh t1, 0(t0)			
 		lh t2, 2(t0)			
 
-		# --- TESTA COLISÃO COM INIMIGO A ---
+		# TESTA COLISï¿½O COM INIMIGO A
 		la t3, ENEMY_A_ACTIVE
 		lw t4, 0(t3)
 		li t5, 1
-		bne t4, t5, TESTA_INIMIGO_B	# Se o A não está ativo, pula para testar o B
+		bne t4, t5, TESTA_INIMIGO_B	# Se o A nï¿½o estï¿½ ativo, pula para testar o B
 		
 		la t3, ENEMY_A_POS
 		lh t4, 0(t3)			
 		lh t5, 2(t3)			
 		
-		bne t1, t4, TESTA_INIMIGO_B	# Se X não bateu, testa o B
-		bne t2, t5, TESTA_INIMIGO_B	# Se Y não bateu, testa o B
+		bne t1, t4, TESTA_INIMIGO_B	# Se X nï¿½o bateu, testa o B
+		bne t2, t5, TESTA_INIMIGO_B	# Se Y nï¿½o bateu, testa o B
 		
-		# SE CHEGOU AQUI, O INIMIGO A ALCANÇOU O PLAYER!
+		# SE CHEGOU AQUI, O INIMIGO A ALCANï¿½OU O PLAYER
 		la a0, ENEMY_A_POS		# Passa dados do A por argumento
 		la a1, ENEMY_A_OLD_POS
 		li a2, 288			# X de reset do A (Ponto 0)
 		li a3, 128			# Y de reset do A
 		j APLICA_DANO_LOGICA
 		
-		# --- ADICIONAR NO FINAL DE VERIFICA_DANO_PLAYER ---
 		la t0, BOSS_ACTIVE
 		lw t1, 0(t0)
 		li t2, 1
-		bne t1, t2, FIM_DANO_BOSS # Se o boss não estiver ativo, pula
+		bne t1, t2, FIM_DANO_BOSS # Se o boss nï¿½o estiver ativo, pula
 		
 		la t0, CHAR_POS
 		lh t1, 0(t0)			# Player X
@@ -851,16 +834,16 @@ VERIFICA_DANO_PLAYER:
 		la a1, BOSS_OLD_POS
 		li a2, 144
 		li a3, 48
-		j APLICA_DANO_LOGICA	# Tira vida e te teleporta pro início da fase
+		j APLICA_DANO_LOGICA	# Tira vida e te teleporta pro inï¿½cio da fase
 		
 FIM_DANO_BOSS:
 
 TESTA_INIMIGO_B:
-		# --- TESTA COLISÃO COM INIMIGO B ---
+		#TESTA COLISï¿½O COM INIMIGO B
 		la t3, ENEMY_B_ACTIVE
 		lw t4, 0(t3)
 		li t5, 1
-		bne t4, t5, FIM_VERIFICA_DANO	# Se o B também não está ativo, encerra
+		bne t4, t5, FIM_VERIFICA_DANO	# Se o B tambï¿½m nï¿½o estï¿½ ativo, encerra
 		
 		la t3, ENEMY_B_POS
 		lh t4, 0(t3)			
@@ -869,15 +852,15 @@ TESTA_INIMIGO_B:
 		bne t1, t4, FIM_VERIFICA_DANO	
 		bne t2, t5, FIM_VERIFICA_DANO	
 		
-		# SE CHEGOU AQUI, O INIMIGO B ALCANÇOU O PLAYER!
+		# SE CHEGOU AQUI, O INIMIGO B ALCANï¿½OU O PLAYER
 		la a0, ENEMY_B_POS		# Passa dados do B por argumento
 		la a1, ENEMY_B_OLD_POS
 		li a2, 128			# X de reset do B (Ponto 1)
 		li a3, 112			# Y de reset do B
 
-# -----------------------------------------------------------------
-# ROTINA CORE DE PROCESAMENTO DE DANO (Acionada por qualquer inimigo)
-# -----------------------------------------------------------------
+# ------
+# DANO
+# ------
 APLICA_DANO_LOGICA:
 		# Subtrai uma vida do jogador
 		la t0, PLAYER_LIVES
@@ -886,19 +869,19 @@ APLICA_DANO_LOGICA:
 		sw t1, 0(t0)
 		
 		# Se as vidas ainda forem maiores que zero, continua o jogo (reposiciona)
-		bgtz t1, CONTINUA_VIVO   # <--- CORREÇÃO: Pula o Game Over e vai para o reset do round
+		bgtz t1, CONTINUA_VIVO 
 		
-		# --- SE CHEGOU AQUI, É GAME OVER (0 VIDAS) ---
+		# GAME OVER
 		addi sp, sp, -4
 		sw ra, 0(sp)
-		li a0, 60                # Espera ~60 frames com o player morto na tela
+		li a0, 60                
 		call ESPERA_FRAMES
 		lw ra, 0(sp)
 		addi sp, sp, 4
 		
 		j TELA_GAME_OVER         # Vai para o fim do jogo definitivo
 
-CONTINUA_VIVO:                   # <--- CORREÇÃO: Label adicionada aqui!
+CONTINUA_VIVO:
 		# Configura limpeza do fantasma da morte do Player
 		la t0, CHAR_POS
 		lw t1, 0(t0)			
@@ -922,7 +905,6 @@ CONTINUA_VIVO:                   # <--- CORREÇÃO: Label adicionada aqui!
 		li t1, 2
 		sw t1, 0(t0)			
 
-		# --- REPOSICIONA OS ATORES ---
 		# Player volta para a base inferior (160, 208)
 		li t1, 160
 		li t2, 208
@@ -934,17 +916,17 @@ CONTINUA_VIVO:                   # <--- CORREÇÃO: Label adicionada aqui!
 		sh t2, 2(t0)
 		
 		# Salva X (a2) e Y (a3) do inimigo corretamente sem misturar os dados
-		sh a2, 0(a0)	# Define o novo X na posição atual
-		sh a3, 2(a0)	# Define o novo Y na posição atual
-		sh a2, 0(a1)	# Define o novo X na posição antiga (rastro)
-		sh a3, 2(a1)	# Define o novo Y na posição antiga (rastro)
+		sh a2, 0(a0)	# Define o novo X na posiï¿½ï¿½o atual
+		sh a3, 2(a0)	# Define o novo Y na posiï¿½ï¿½o atual
+		sh a2, 0(a1)	# Define o novo X na posiï¿½ï¿½o antiga
+		sh a3, 2(a1)	# Define o novo Y na posiï¿½ï¿½o antiga
 
 FIM_VERIFICA_DANO:
 		ret
 		
-# --- TELA DE GAME OVER E REINÍCIO ---
+#TELA DE GAME OVER E REINï¿½CIO
 TELA_GAME_OVER:
-        	# 1. Desenha a imagem/texto de derrota nos dois buffers
+        	# Desenha a imagem/texto de derrota nos dois buffers
 	        la a0, derrotatxt        # Label do include da sua tela de game over
 	        li a1, 0                 # X = 0
 	        li a2, 0                 # Y = 0
@@ -952,16 +934,16 @@ TELA_GAME_OVER:
 	        call PRINT
 	        li a3, 1                 # Buffer 1
 	        call PRINT
-	        # 2. Trava a tela esperando o jogador apertar Espaço
-	        call WAIT_SPACE
+	        # Trava a tela esperando o jogador apertar Espaï¿½o
+	        j FIM
 	        # =========================================================
-	        # REINICIALIZAÇÃO DO JOGO (RESET DE VARIÁVEIS)
+	        # REINICIALIZAï¿½ï¿½O DO JOGO
 	        # =========================================================
 	        # Reseta as vidas do player para 3
 	        la t0, PLAYER_LIVES
 	        li t1, 3
 	        sw t1, 0(t0)
-	        # Reseta o nível atual para 1
+	        # Reseta o nï¿½vel atual para 1
 	        la t0, CURRENT_LEVEL
 	        li t1, 1
 	        sw t1, 0(t0)
@@ -970,14 +952,14 @@ TELA_GAME_OVER:
 	        sw zero, 0(t0)
 	        la t0, ENEMY_RESPAWN_COUNT
 	        sw zero, 0(t0)
-	        # Reseta os inimigos para inativos (recomeçar da fase 1 limpo)
+	        # Reseta os inimigos para inativos (recomeï¿½ar da fase 1 limpo)
 	        la t0, ENEMY_A_ACTIVE
 	        sw zero, 0(t0)
 	        la t0, ENEMY_B_ACTIVE
 	        sw zero, 0(t0)
 	        la t0, BULLET_ACTIVE
 	        sw zero, 0(t0)
-	        # Reseta a posição do Personagem para o local inicial (160, 208)
+	        # Reseta a posiï¿½ï¿½o do Personagem para o local inicial (160, 208)
 	        li t1, 144
 	        li t2, 144
 	        la t0, CHAR_POS
@@ -986,7 +968,7 @@ TELA_GAME_OVER:
 	        la t0, OLD_CHAR_POS
 	        sh t1, 0(t0)
 	        sh t2, 2(t0)
-	        # 3. Força o redesenho do mapa inicial para limpar a imagem de derrota
+	        # Forï¿½a o redesenho do mapa inicial para limpar a imagem de derrota
 	        la t0, MATRIZ_MAPA1
 	        la t1, CURRENT_MAP_MATRIX
 	        sw t0, 0(t1)
@@ -1001,11 +983,11 @@ TELA_GAME_OVER:
 	        li a3, 1                
 	        call PRINT               # Limpa Buffer 1
 	        li s0, 0                 # Reinicia o sincronizador de frame (Double Buffering)
-	        # 4. Salta de volta para o início do jogo (Game Loop)
+	        # Salta de volta para o inï¿½cio do jogo (Game Loop)
 	        j GAME_LOOP
 	        
 TELA_VITORIA:
-		# 1. Desenha a imagem/texto de derrota nos dois buffers
+		# Desenha a imagem/texto de vitoria nos dois buffers
 	        la a0, vitoriatxt        # Label do include da sua tela de game over
 	        li a1, 0                 # X = 0
 	        li a2, 0                 # Y = 0
@@ -1016,10 +998,10 @@ TELA_VITORIA:
 	        j FIM
 		
 # =================================================================
-# VERIFICA SE O TIRO DO JOGADOR ACERTOU O CHEFÃO
+# VERIFICA SE O TIRO DO JOGADOR ACERTOU O CHEFAO
 # =================================================================
 VERIFICA_DANO_BOSS:
-		# Só checa se o Boss estiver totalmente ativo (1) e tiro ativo (1)
+		# Sï¿½ checa se o Boss estiver totalmente ativo (1) e tiro ativo (1)
 		la t0, BOSS_ACTIVE
 		lw t1, 0(t0)
 		li t2, 1
@@ -1030,12 +1012,12 @@ VERIFICA_DANO_BOSS:
 		li t2, 1
 		bne t1, t2, FIM_DANO_DO_CHEFAO
 
-		# Carrega a posição do Tiro do Player
+		# Carrega a posiï¿½ï¿½o do Tiro do Player
 		la t0, BULLET_POS       
 		lh t1, 0(t0)            # Tiro X
 		lh t2, 2(t0)            # Tiro Y
 
-		# Carrega a posição do Boss
+		# Carrega a posiï¿½ï¿½o do Boss
 		la t3, BOSS_POS
 		lh t4, 0(t3)            # Boss X
 		lh t5, 2(t3)            # Boss Y
@@ -1043,27 +1025,24 @@ VERIFICA_DANO_BOSS:
 		# Compara as coordenadas X e Y
 		bne t1, t4, FIM_DANO_DO_CHEFAO
 		bne t2, t5, FIM_DANO_DO_CHEFAO
-
-		# --- IMPACTO DETECTADO! ---
 		
-		# 1. Desativa o tiro do jogador (vai para o estado de sumiço)
+		# Desativa o tiro do jogador
 		la t0, BULLET_ACTIVE
 		li t1, 2                
 		sw t1, 0(t0)
 
-		# 2. Subtrai vida do Boss
+		# Subtrai vida do Boss
 		la t0, BOSS_LIVES
 		lw t1, 0(t0)
 		addi t1, t1, -1         
 		sw t1, 0(t0)
 
-		# 3. Verifica se o Boss morreu
+		# Verifica se o Boss morreu
 		bgtz t1, FIM_DANO_DO_CHEFAO  
 
 		# --- O BOSS MORREU! ---
-		# Em vez de travar tudo com ESPERA_FRAMES, ativamos a sequência de morte fluida
 		la t0, BOSS_ACTIVE
-		li t1, 2                # Estado 2: Limpar o frame atual
+		li t1, 2             
 		sw t1, 0(t0)
 
 FIM_DANO_DO_CHEFAO:
@@ -1073,12 +1052,12 @@ FIM_DANO_DO_CHEFAO:
 		la t0, BOSS_ACTIVE
 		lw t1, 0(t0)
 		
-		# Se o boss está vivo (1) ou totalmente limpo (0), não faz nada
+		# Se o boss estï¿½ vivo (1) ou totalmente limpo (0), nï¿½o faz nada
 		beq t1, zero, FIM_DEATH_TIMER
 		li t2, 1
 		beq t1, t2, FIM_DEATH_TIMER
 		
-		# Se está no estado 2, muda para o estado 3 (para limpar no frame inverso)
+		# Se estï¿½ no estado 2, muda para o estado 3
 		li t2, 2
 		bne t1, t2, BOSS_EM_ESPERA
 		
@@ -1088,8 +1067,8 @@ FIM_DANO_DO_CHEFAO:
 		ret
 
 BOSS_EM_ESPERA:
-		# Se chegou aqui, BOSS_ACTIVE == 3 (Os dois frames de rastro já foram limpos)
-		# Incrementa o temporizador que criamos na memória
+		# Se chegou aqui, BOSS_ACTIVE == 3 (Os dois frames de rastro jï¿½ foram limpos)
+		# Incrementa o temporizador que criamos na memï¿½ria
 		la t0, BOSS_DEATH_TIMER
 		lw t1, 0(t0)
 		addi t1, t1, 1
@@ -1098,7 +1077,7 @@ BOSS_EM_ESPERA:
 		li t2, 60               # ~60 frames de espera (aprox. 1 segundo)
 		blt t1, t2, FIM_DEATH_TIMER
 		
-		# O tempo acabou! Vai para a tela de Vitória
+		# O tempo acabou! Vai para a tela de Vitï¿½ria
 		j TELA_VITORIA
 
 FIM_DEATH_TIMER:
@@ -1109,22 +1088,18 @@ FIM_DEATH_TIMER:
 # =================================================================
 # MUDANCA DE FASE
 # =================================================================
-		
-# =================================================================
-# MUDANÇA DE FASE E TRANSIÇÃO DE CENÁRIO (ATUALIZADA MAPA 3)
-# =================================================================
 VERIFICA_MUDANCA_FASE:
 		la t0, CURRENT_LEVEL
 		lw t1, 0(t0)
 		
 		li t2, 1
-		beq t1, t2, CHECKA_FASE_1	# Se está na Fase 1, faz a lógica antiga
+		beq t1, t2, CHECKA_FASE_1	
 		li t2, 2
-		beq t1, t2, CHECKA_FASE_2	# Se está na Fase 2, faz a nova lógica do Boss
-		j FIM_MUDANCA			# Se já for Fase 3, não faz nada
+		beq t1, t2, CHECKA_FASE_2	
+		j FIM_MUDANCA			
 
 # -----------------------------------------------------------------
-# LOGICA DA PORTA DO MAPA 1 -> MAPA 2 (Mantida igual)
+# LOGICA DA PORTA DO MAPA 1 -> MAPA 2
 # -----------------------------------------------------------------
 CHECKA_FASE_1:
 		la t0, CHAR_POS
@@ -1143,7 +1118,7 @@ CHECKA_FASE_1:
 		li t6, 19			
 		bne t5, t6, FIM_MUDANCA	
 		
-		# GATILHO: ENTROU NO MAPA 2
+		# ENTROU NO MAPA 2
 		la t0, CURRENT_LEVEL
 		li t1, 2
 		sw t1, 0(t0)
@@ -1201,20 +1176,17 @@ CHECKA_FASE_1:
 		addi sp, sp, 4			
 		j FIM_MUDANCA
 
-# -----------------------------------------------------------------
-# NOVA LOGICA: MAPA 2 -> MAPA 3 (SÓ ENTRA SE INIMIGOS == 0)
-# -----------------------------------------------------------------
 CHECKA_FASE_2:
-		# Passo 1: Verificar se os inimigos ainda estão vivos
+		# Verifica se os inimigos ainda estï¿½o vivos
 		la t0, ENEMY_A_ACTIVE
 		lw t1, 0(t0)
-		bnez t1, FIM_MUDANCA		# Se Inimigo A não é 0, sala não está limpa. Sai.
+		bnez t1, FIM_MUDANCA		# Se Inimigo A nï¿½o ï¿½ 0, sala nï¿½o estï¿½ limpa. Sai.
 		
 		la t0, ENEMY_B_ACTIVE
 		lw t1, 0(t0)
-		bnez t1, FIM_MUDANCA		# Se Inimigo B não é 0, sala não está limpa. Sai.
+		bnez t1, FIM_MUDANCA		# Se Inimigo B nï¿½o ï¿½ 0, sala nï¿½o estï¿½ limpa. Sai.
 
-		# Passo 2: Calcular o bloco atual do Player para ver se tocou na porta (ID 29)
+		# Calcula o bloco atual do Player para ver se tocou na porta
 		la t0, CHAR_POS
 		lh t1, 0(t0)			# Player X
 		lh t2, 2(t0)			# Player Y
@@ -1223,26 +1195,25 @@ CHECKA_FASE_2:
 		li t4, 20
 		mul t3, t3, t4			# Linha * 20
 		srli t4, t1, 4			# X / 16
-		add t3, t3, t4			# Índice na matriz
+		add t3, t3, t4			# ï¿½ndice na matriz
 		
 		la t4, CURRENT_MAP_MATRIX
 		lw t4, 0(t4)			# Aponta para Matriz do Mapa 2
 		add t4, t4, t3
-		lbu t5, 0(t4)			# Lê o ID do Bloco
+		lbu t5, 0(t4)			# Lï¿½ o ID do Bloco
 		
 		li t6, 29			# ID da porta do Mapa 2
-		bne t5, t6, FIM_MUDANCA	# Se não pisou no bloco 29, ignora
+		bne t5, t6, FIM_MUDANCA	# Se nï¿½o pisou no bloco 29, ignora
 		
 		# =========================================================
 		# GATILHO ATIVADO: PORTA ENCONTRADA E INIMIGOS MORTOS!
 		# =========================================================
 		
-		# Atualiza nível para Fase 3
+		# Atualiza nï¿½vel para Fase 3
 		la t0, CURRENT_LEVEL
 		li t1, 3
 		sw t1, 0(t0)
 		
-		# Troca ponteiros lógicos e de background para o Mapa 3
 		la t0, MATRIZ_MAPA3
 		la t1, CURRENT_MAP_MATRIX
 		sw t0, 0(t1)
@@ -1251,7 +1222,7 @@ CHECKA_FASE_2:
 		la t1, CURRENT_MAP_BG
 		sw t0, 0(t1)
 		
-		# Posição inicial do Player ao entrar na sala do Chefão (Exemplo: Centro-Baixo)
+		# Posiï¿½ï¿½o inicial do Player ao entrar na sala do Chefï¿½o
 		li t1, 144
 		li t2, 208
 		la t0, CHAR_POS
@@ -1261,7 +1232,7 @@ CHECKA_FASE_2:
 		sh t1, 0(t0)
 		sh t2, 2(t0)
 		
-		# --- INICIALIZAÇÃO DO CHEFÃO (Mapa 3) ---
+		# NICIALIZAï¿½ï¿½O DO CHEFï¿½O
 		li t1, 144                      # X inicial do Boss (Meio da tela)
 		li t2, 48                       # Y inicial do Boss (Parte superior)
 		la t0, BOSS_POS
@@ -1273,9 +1244,8 @@ CHECKA_FASE_2:
 		
 		la t0, BOSS_ACTIVE
 		li t1, 1
-		sw t1, 0(t0)                    # Ativa o Chefão! (BOSS_ACTIVE = 1)
+		sw t1, 0(t0)                    # Ativa o Chefï¿½o
 		
-		# Carimba o background do MAPA3 em ambos os frames para evitar flicker
 		addi sp, sp, -4
 		sw ra, 0(sp)
 		
@@ -1296,15 +1266,15 @@ FIM_MUDANCA:
 		ret
 		
 # =================================================================
-# IA DO CHEFÃO: MOVIMENTO E GATILHO DE DISPARO
+# IA DO CHEFï¿½O: MOVIMENTO E GATILHO DE DISPARO
 # =================================================================
 ATUALIZA_BOSS:
 		la t0, BOSS_ACTIVE
 		lw t1, 0(t0)
 		li t2, 1
-		bne t1, t2, FIM_ATUALIZA_BOSS	# Só processa se o Boss estiver ativo (1)
+		bne t1, t2, FIM_ATUALIZA_BOSS	# Sï¿½ processa se o Boss estiver ativo (1)
 		
-		# --- 1. CONTROLE DE VELOCIDADE DO PASSO ---
+		# CONTROLE DE VELOCIDADE DO PASSO
 		la t0, BOSS_COUNT
 		lw t1, 0(t0)
 		addi t1, t1, 1
@@ -1312,11 +1282,11 @@ ATUALIZA_BOSS:
 		
 		la t2, BOSS_SPEED
 		lw t2, 0(t2)
-		blt t1, t2, CHECK_BOSS_FIRE	# Se não deu o tempo de andar, pula direto pro tiro
+		blt t1, t2, CHECK_BOSS_FIRE	# Se nï¿½o deu o tempo de andar, pula direto pro tiro
 		
-		sw zero, 0(t0)			# Reseta cronômetro do passo
+		sw zero, 0(t0)			# Reseta cronï¿½metro do passo
 		
-		# --- 2. IA DE MOVIMENTO (PERSEGUIÇÃO) ---
+		#  MOVIMENTO
 		addi sp, sp, -4
 		sw ra, 0(sp)
 		
@@ -1324,7 +1294,7 @@ ATUALIZA_BOSS:
 		lh t3, 0(t0)			# t3 = Boss X
 		lh t4, 2(t0)			# t4 = Boss Y
 		
-		# Carimba a posição atual no rastro antigo antes de andar
+		# Carimba a posiï¿½ï¿½o atual no rastro antigo antes de andar
 		la t1, BOSS_OLD_POS
 		lw t2, 0(t0)
 		sw t2, 0(t1)
@@ -1340,7 +1310,7 @@ BOSS_IA_ESQ:	addi t3, t3, -16
 BOSS_IA_DIR:	addi t3, t3, 16
 		j CHK_COLISAO_BOSS
 
-BOSS_IA_Y:	beq t4, t6, RESTAURA_PILHA_BOSS	# <--- CORREÇÃO: Vai para a label que limpa a pilha!
+BOSS_IA_Y:	beq t4, t6, RESTAURA_PILHA_BOSS
 		blt t4, t6, BOSS_IA_BAIXO
 BOSS_IA_CIMA:	addi t4, t4, -16
 		j CHK_COLISAO_BOSS
@@ -1358,9 +1328,9 @@ CHK_COLISAO_BOSS:
 		add t2, t2, t1
 		lbu t1, 0(t2)			
 		
-		beq t1, zero, RESTAURA_PILHA_BOSS # <--- CORREÇÃO: Limpa a pilha se colidir
+		beq t1, zero, RESTAURA_PILHA_BOSS
 		
-		# Grava a nova posição válida
+		# Grava a nova posiï¿½ï¿½o vï¿½lida
 		la t0, BOSS_POS
 		sh t3, 0(t0)
 		sh t4, 2(t0)
@@ -1370,7 +1340,7 @@ RESTAURA_PILHA_BOSS:
 		addi sp, sp, 4
 		j CHECK_BOSS_FIRE
 
-# --- 3. LÓGICA DE RECARGA E MIRA AUTOMÁTICA DO TIRO ---
+# Lï¿½GICA DE RECARGA E MIRA AUTOMï¿½TICA DO TIRO
 CHECK_BOSS_FIRE:
 		la t0, BOSS_FIRE_COUNT
 		lw t1, 0(t0)
@@ -1383,16 +1353,16 @@ CHECK_BOSS_FIRE:
 		
 		la t2, BOSS_BULLET_ACTIVE
 		lw t3, 0(t2)
-		bnez t3, DESENHA_BOSS		# Se já tem um tiro verde na tela, espera
+		bnez t3, DESENHA_BOSS		# Se jï¿½ tem um tiro verde na tela, espera
 		
 		sw zero, 0(t0)			# Reseta o tempo de recarga
 		li t3, 1
-		sw t3, 0(t2)			# Ativa o tiro (BOSS_BULLET_ACTIVE = 1)
+		sw t3, 0(t2)			# Ativa o tiro
 		
 		la t2, BOSS_POS
 		lw t3, 0(t2)
 		la t4, BOSS_BULLET_POS
-		sw t3, 0(t4)			# Projétil nasce na coordenada central do Boss
+		sw t3, 0(t4)			# Projï¿½til nasce na coordenada central do Boss
 		
 		lh t3, 0(t2)			# BX
 		lh t4, 2(t2)			# BY
@@ -1400,7 +1370,6 @@ CHECK_BOSS_FIRE:
 		lh t5, 0(t1)			# PX
 		lh t6, 2(t1)			# PY
 		
-		# Algoritmo de Mira em Cruz (Ortogonal) baseado na maior distância
 		sub t1, t5, t3			# t1 = dx (PX - BX)
 		sub t2, t6, t4			# t2 = dy (PY - BY)
 		bgez t1, BX_POS
@@ -1420,11 +1389,11 @@ BDISP_BAIXO:	li t1, 2			# Atira para Baixo
 BGRAVA_DIR:	la t0, BOSS_BULLET_DIR
 		sw t1, 0(t0)
 
-# --- 4. RENDERIZAÇÃO DO SPRITE DO BOSS ---
+# ENDERIZAï¿½ï¿½O DO SPRITE DO BOSS
 DESENHA_BOSS:
 		addi sp, sp, -4
 		sw ra, 0(sp)
-		la a0, chefao			# Seu sprite armazenado
+		la a0, chefao1			
 		la t0, BOSS_POS
 		lh a1, 0(t0)
 		lh a2, 2(t0)
@@ -1437,18 +1406,18 @@ FIM_ATUALIZA_BOSS:
 		ret
 
 # =================================================================
-# FÍSICA E COLISÃO DO PROJÉTIL VERDE DO CHEFÃO
+# Fï¿½SICA E COLISï¿½O DO PROJï¿½TIL VERDE DO CHEFï¿½O
 # =================================================================
 MOVE_BOSS_BULLET:
 		la t0, BOSS_BULLET_ACTIVE
 		lw t1, 0(t0)
 		li t2, 1
-		bne t1, t2, FIM_MOVE_BOSS_BULLET # Só move se estiver ativo (1)
+		bne t1, t2, FIM_MOVE_BOSS_BULLET # Sï¿½ move se estiver ativo (1)
 		
 		la t0, BOSS_BULLET_POS
 		lw t1, 0(t0)
 		la t2, OLD_BOSS_BULLET_POS
-		sw t1, 0(t2)			# Copia posição para histórico de rastro
+		sw t1, 0(t2)			# Copia posiï¿½ï¿½o para histï¿½rico de rastro
 		
 		lh t3, 0(t0)			# Tiro X
 		lh t4, 2(t0)			# Tiro Y
@@ -1475,7 +1444,6 @@ BB_ESQ:		addi t3, t3, -16
 BB_DIR:		addi t3, t3, 16
 
 CHK_BB_COLISAO:
-		# Teste de bordas da tela
 		blt t3, zero, BB_MORRE
 		li t1, 320
 		bge t3, t1, BB_MORRE
@@ -1483,7 +1451,6 @@ CHK_BB_COLISAO:
 		li t1, 240
 		bge t4, t1, BB_MORRE
 		
-		# Teste de colisão com a Matriz 3
 		srli t1, t4, 4
 		li t2, 20
 		mul t1, t1, t2
@@ -1493,24 +1460,23 @@ CHK_BB_COLISAO:
 		lw t2, 0(t2)
 		add t2, t2, t1
 		lbu t1, 0(t2)
-		beq t1, zero, BB_MORRE		# Bateu em parede lógica, apaga o tiro
+		beq t1, zero, BB_MORRE		# Bateu em parede lï¿½gica, apaga o tiro
 		
-		# --- SUBSTITUA APENAS O TRECHO DE IMPACTO EM MOVE_BOSS_BULLET ---
 		la t0, CHAR_POS
 		lh t1, 0(t0)
 		lh t2, 2(t0)
 		bne t3, t1, BB_SUCESSO		
 		bne t4, t2, BB_SUCESSO		
 		
-		# IMPACTO!
+		# IMPACTO
 		la t0, BOSS_BULLET_ACTIVE
 		li t1, 2
-		sw t1, 0(t0)			# Coloca o tiro para sumir no próximo frame
+		sw t1, 0(t0)			# Coloca o tiro para sumir no prï¿½ximo frame
 		
 		addi sp, sp, -4
 		sw ra, 0(sp)
 		
-		la a0, CHAR_POS			# Alvo do reset é o Player
+		la a0, CHAR_POS			# Alvo do reset ï¿½ o Player
 		la a1, OLD_CHAR_POS
 		li a2, 144				# X inicial do player no mapa 3
 		li a3, 208				# Y inicial do player no mapa 3
@@ -1528,7 +1494,7 @@ BB_SUCESSO:
 
 BB_MORRE:	la t0, BOSS_BULLET_ACTIVE
 		li t1, 2
-		sw t1, 0(t0)			# Inicia protocolo de sumiço do tiro
+		sw t1, 0(t0)			# Inicia protocolo de sumiï¿½o do tiro
 
 FIM_MOVE_BOSS_BULLET:
 		ret
@@ -1543,7 +1509,7 @@ DESENHA_BOSS_BULLET:
 		bne t1, t2, FIM_DRAW_BB
 		
 		la t0, BOSS_BULLET_POS
-		la a0, chefao_tiro		# Sua textura verde
+		la a0, cajado	
 		lh a1, 0(t0)
 		lh a2, 2(t0)
 		mv a3, s0
@@ -1571,12 +1537,12 @@ LIMPA_RASTRO_BOSS:
 FIM_L_BOSS:	ret
 
 # =================================================================
-# LIMPEZA DO RASTRO DO TIRO VERDE DO CHEFÃO
+# LIMPEZA DO RASTRO DO TIRO VERDE DO CHEFï¿½O
 # =================================================================
 LIMPA_RASTRO_BOSS_BULLET:
 		la t0, BOSS_BULLET_ACTIVE
 		lw t1, 0(t0)
-		beq t1, zero, FIM_L_BB		# Se inativo (0), não faz nada
+		beq t1, zero, FIM_L_BB		# Se inativo (0), nï¿½o faz nada
 		
 		# Salva estado atual na pilha
 		addi sp, sp, -4
@@ -1595,8 +1561,7 @@ LIMPA_RASTRO_BOSS_BULLET:
 		
 		lw t1, 0(sp)
 		addi sp, sp, 4
-		
-		# --- MÁQUINA DE ESTADOS DO DOUBLE BUFFERING ---
+
 		li t2, 2
 		beq t1, t2, BB_VA_PARA_3
 		li t2, 3
@@ -1606,7 +1571,7 @@ LIMPA_RASTRO_BOSS_BULLET:
 BB_VA_PARA_3:
 		la t0, BOSS_BULLET_ACTIVE
 		li t1, 3
-		sw t1, 0(t0)			# Configura para limpar o segundo frame no próximo ciclo
+		sw t1, 0(t0)			# Configura para limpar o segundo frame no prï¿½ximo ciclo
 		j FIM_L_BB
 
 BB_VA_PARA_0:
@@ -1617,7 +1582,7 @@ FIM_L_BB:	ret
 
 
 # =================================================================
-# ESPERA UM DETERMINADO NÚMERO DE FRAMES (DELAY LÓGICO)
+# ESPERA UM DETERMINADO Nï¿½MERO DE FRAMES (DELAY Lï¿½GICO)
 # Entrada: a0 = quantidade de frames para esperar
 # =================================================================
 ESPERA_FRAMES:
@@ -1625,11 +1590,8 @@ ESPERA_FRAMES:
 LOOP_DELAY_OUTER:
 		beq t0, a0, FIM_DELAY
 		
-		# Este loop interno serve para gastar tempo do processador.
-		# Como o RARS simula muito rápido, precisamos contar até um número alto
-		# para dar a sensação de 1 frame de atraso na percepção humana.
 		li t1, 0
-		li t2, 6000             # Ajuste este número se achar o delay muito longo/curto
+		li t2, 6000             
 LOOP_DELAY_INNER:
 		addi t1, t1, 1
 		blt t1, t2, LOOP_DELAY_INNER
@@ -1638,3 +1600,74 @@ LOOP_DELAY_INNER:
 		j LOOP_DELAY_OUTER
 FIM_DELAY:
 		ret
+# =================================================================
+# WAIT_SPACE_WITH_MUSIC
+# Espera o espaÃ§o ser teclado enquanto toca a melodia de forma assÃ­ncrona
+# =================================================================
+WAIT_SPACE_WITH_MUSIC:
+        # Salva o contexto na pilha (Stack)
+        addi sp, sp, -24
+        sw ra, 0(sp)
+        sw s0, 4(sp)
+        sw s1, 8(sp)
+        sw s2, 12(sp)
+        sw s3, 16(sp)
+
+        la s0, MUSICA_INTRO       # s0 = Ponteiro para a nota atual da mÃºsica
+        li s1, 0                  # s1 = Timestamp de quando tocar a prÃ³xima nota (0 = toca imediatamente)
+
+LOOP_ESPERA_E_MUSICA:
+        # --- PARTE 1: VERIFICAÃ‡ÃƒO DO TECLADO (Igual ao seu WAIT_SPACE original) ---
+        li t1, 0xFF200000        
+        lw t0, 0(t1)              # LÃª o bit de controle do teclado
+        andi t0, t0, 0x0001     
+        beqz t0, CHECA_TEMPO_MUSICA # Se nenhuma tecla foi pressionada, vai direto gerenciar a mÃºsica
+        
+        lw t2, 4(t1)              # LÃª a tecla pressionada
+        li t0, 32                 # CÃ³digo ASCII da barra de espaÃ§o
+        beq t2, t0, FIM_WAIT_MUSIC # Se foi EspaÃ§o, sai da funÃ§Ã£o e avanÃ§a no jogo
+
+CHECA_TEMPO_MUSICA:
+        # --- PARTE 2: CONTROLE DO TEMPO DA MÃšSICA ---
+        li a7, 30                 # ecall 30: Pega o tempo do sistema (System Time)
+        ecall                     # Retorna os 32 bits inferiores do tempo em a0
+        mv t3, a0                 # t3 = Tempo atual em milissegundos
+
+        # Se o tempo atual for menor que o target (s1), ainda nÃ£o Ã© hora da prÃ³xima nota
+        blt t3, s1, LOOP_ESPERA_E_MUSICA 
+
+        # --- PARTE 3: EMISSÃƒO DA NOTA ---
+        lw t4, 0(s0)              # Carrega a nota (Pitch) do array
+        li t5, -1
+        bne t4, t5, EMITE_SOM     # Se nÃ£o for -1, toca a nota
+
+        # Se for -1, a mÃºsica acabou. Reseta o ponteiro s0 para o inÃ­cio (Looping)
+        la s0, MUSICA_INTRO
+        lw t4, 0(s0)              # Recarrega a primeira nota
+
+EMITE_SOM:
+        lw t6, 4(s0)              # t6 = DuraÃ§Ã£o da nota em milissegundos
+
+        # Configura os argumentos para a ecall 31 (MIDI AssÃ­ncrono)
+        mv a0, t4                 # Nota/Pitch
+        mv a1, t6                 # DuraÃ§Ã£o
+        li a2, 19                 # Instrumento (19 = Ã“rgÃ£o de Igreja / Church Organ)
+        li a3, 75                 # Volume (0 a 127)
+        li a7, 31                 # Chamada MIDI AssÃ­ncrona
+        ecall
+
+        # Define quando serÃ¡ a prÃ³xima nota: Tempo Atual + DuraÃ§Ã£o da nota
+        add s1, t3, t6            
+        addi s0, s0, 8            # AvanÃ§a o ponteiro do array em 8 bytes (2 palavras de 4 bytes)
+
+        j LOOP_ESPERA_E_MUSICA    # Continua no loop
+
+FIM_WAIT_MUSIC:
+        # Restaura os registradores salvos
+        lw ra, 0(sp)
+        lw s0, 4(sp)
+        lw s1, 8(sp)
+        lw s2, 12(sp)
+        lw s3, 16(sp)
+        addi sp, sp, 24
+        ret
