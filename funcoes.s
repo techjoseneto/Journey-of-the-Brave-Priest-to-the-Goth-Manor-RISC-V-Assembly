@@ -974,57 +974,8 @@ TELA_GAME_OVER:
 	        call PRINT
 	        li a3, 1                 # Buffer 1
 	        call PRINT
-	        # Trava a tela esperando o jogador apertar Espa�o
+	        
 	        j FIM
-	        # =========================================================
-	        # REINICIALIZA��O DO JOGO
-	        # =========================================================
-	        # Reseta as vidas do player para 3
-	        la t0, PLAYER_LIVES
-	        li t1, 3
-	        sw t1, 0(t0)
-	        # Reseta o n�vel atual para 1
-	        la t0, CURRENT_LEVEL
-	        li t1, 1
-	        sw t1, 0(t0)
-	        # Reseta os contadores de respawn/fantasma para evitar lixo visual
-	        la t0, PLAYER_RESPAWN_COUNT
-	        sw zero, 0(t0)
-	        la t0, ENEMY_RESPAWN_COUNT
-	        sw zero, 0(t0)
-	        # Reseta os inimigos para inativos (recome�ar da fase 1 limpo)
-	        la t0, ENEMY_A_ACTIVE
-	        sw zero, 0(t0)
-	        la t0, ENEMY_B_ACTIVE
-	        sw zero, 0(t0)
-	        la t0, BULLET_ACTIVE
-	        sw zero, 0(t0)
-	        # Reseta a posi��o do Personagem para o local inicial (160, 208)
-	        li t1, 144
-	        li t2, 144
-	        la t0, CHAR_POS
-	        sh t1, 0(t0)
-	        sh t2, 2(t0)
-	        la t0, OLD_CHAR_POS
-	        sh t1, 0(t0)
-	        sh t2, 2(t0)
-	        # For�a o redesenho do mapa inicial para limpar a imagem de derrota
-	        la t0, MATRIZ_MAPA1
-	        la t1, CURRENT_MAP_MATRIX
-	        sw t0, 0(t1)
-	        la t0, MAPA1
-	        la t1, CURRENT_MAP_BG
-	        sw t0, 0(t1)
-	        lw a0, 0(t1)             # Recarrega o MAPA1
-	        li a1, 0                
-	        li a2, 0                
-	        li a3, 0                
-	        call PRINT               # Limpa Buffer 0
-	        li a3, 1                
-	        call PRINT               # Limpa Buffer 1
-	        li s0, 0                 # Reinicia o sincronizador de frame (Double Buffering)
-	        # Salta de volta para o in�cio do jogo (Game Loop)
-	        j GAME_LOOP
 	        
 TELA_VITORIA:
 		# Desenha a imagem/texto de vitoria nos dois buffers

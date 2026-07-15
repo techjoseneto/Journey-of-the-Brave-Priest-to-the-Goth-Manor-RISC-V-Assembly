@@ -243,7 +243,7 @@ GAME_LOOP:
 
 		j GAME_LOOP
 
-FIM: 		li a0, 10
+FIM: 		li a7, 10
 		ecall
 		
 .data
